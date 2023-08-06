@@ -1,0 +1,74 @@
+
+.gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.gauge-description {
+    width: 70vw;
+    display: flex;
+    justify-content: space-between;
+
+    p {
+        font-size: 1.5em;
+        display: flex;
+        align-items: center;
+        span {
+            font-size: 0.6em;
+            color: #cccccc;
+            padding: 0.75em;
+        }
+    }
+}
+
+.gauge-bar {
+    width: 70vw;
+    height: 0.5rem;
+    background-color: black;
+    display: flex;
+    position: relative;
+    border-radius: 0.25rem;
+    overflow: hidden
+}
+
+.gauge-bar-total-used {
+    height: 0.5rem;
+    background-color: #ed6c6c;
+    position: absolute;
+    z-index: 1;
+    display: flex;
+}
+
+.gauge-bar-planned-used {
+    display: block;
+    height: 0.5rem;
+    background-color: #919099;
+}
+
+.gauge-bar-used {
+    display: block;
+    height: 0.5rem;
+    background-color: #17a2b8;
+}
+
+.gauge-bar-total-gain {
+    height: 0.5rem;
+    background-color: #d9d9d9;
+    position: absolute;
+    display: flex;
+}
+
+.gauge-bar-planned-gain {
+    display: block;
+    height: 0.5rem;
+}
+
+.gauge-bar-gain {
+    display: block;
+}
+
+.gauge-left {
+    font-size: 1.5em;
+}

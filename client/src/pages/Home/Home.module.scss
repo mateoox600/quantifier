@@ -1,0 +1,68 @@
+
+.home {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2em;
+}
+
+.used-label {
+    display: flex;
+    gap: 1em;
+    align-items: center;
+}
+
+.used-label-content {
+    background-color: #ffffff0d;
+    padding: 0.5em 1em;
+    border-radius: 0.5rem;
+    font-size: 1.5em;
+}
+
+.add-amount {
+    background-color: #6793ed;
+    height: 2em;
+    width: 2em;
+    font-size: 1em;
+    border-radius: 50%;
+}
+
+.current-category {
+    font-size: 2.5em;
+
+    .category-back {
+        background-color: transparent;
+        font-size: 1em;
+        padding-right: 0.5em;
+    }
+
+    .category-delete {
+        background-color: transparent;
+        font-size: 1em;
+        padding-left: 0.5em;
+    }
+}
+
+.current-category-total {
+    .category-used, .category-gain {
+        font-size: 1.5em;
+    }
+
+    .category-nothing {
+        font-size: 1.5em;
+        color: #cccccc;
+    }
+}
+
+.to-list {
+    position: absolute;
+    bottom: 1vw;
+    right: 1vw;
+    width: 5vw;
+    height: 5vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #6793ed;
+    border-radius: 50%;
+}

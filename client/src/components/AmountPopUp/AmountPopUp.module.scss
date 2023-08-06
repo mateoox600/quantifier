@@ -1,0 +1,78 @@
+
+.creation-pop-up {
+    position: absolute;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    z-index: 2;
+    background-color: #000000c0;
+    overflow: hidden;
+}
+
+.creation-form {
+    position: relative;
+    width: 60vw;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background-color: #181a20;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+
+    p {
+        font-size: 1.5em;
+        margin: 0.5em;
+    }
+
+    div {
+        display: flex;
+        flex-direction: column;
+        padding: 0.5em;
+        margin: 0.5em;
+        border-radius: 0.5rem;
+        background-color: #262a34;
+
+        div {
+            display: flex;
+            gap: 0.5em;
+            flex-direction: column;
+
+            &:has(input[type='checkbox']) {
+                flex-direction: row;
+            }
+
+            label {
+                font-size: 1.25em;
+            }
+
+            input {
+                width: 100%;
+                background-color: #181a20;
+                padding: 0.5em;
+                border-radius: 0.25rem;
+                font-size: 1em;
+
+                &[type='checkbox'] {
+                    width: fit-content;
+                    width: 1em;
+                }
+            }
+        }
+    }
+
+    button {
+        width: fit-content;
+        margin: 0.5em;
+        margin-right: 1.5em;
+        margin-bottom: 1em;
+        padding: 0.5em;
+        align-self: flex-end;
+        font-size: 1em;
+        border-radius: 0.25rem;
+        background-color: #6793ed;
+    }
+    
+}

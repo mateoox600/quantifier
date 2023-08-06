@@ -1,0 +1,40 @@
+
+table, th, td {
+    border: 1px solid white;
+    border-collapse: collapse;
+}
+
+.list {
+    width: 100vw;
+    overflow: hidden;
+}
+
+.table {
+    margin: 1em;
+
+    th, td {
+        text-align: center;
+        padding: 0.5em;
+    }
+
+    button {
+        font-size: 1em;
+        background-color: transparent;
+        color: #d68840;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+}
+
+.to-home {
+    position: absolute;
+    bottom: 1vw;
+    right: 1vw;
+    width: 5vw;
+    height: 5vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #6793ed;
+    border-radius: 50%;
+}

@@ -1,0 +1,15 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    text-decoration: none;
+    color: white;
+}
+
+body {
+    width: 100vw;
+    min-height: 100vh;
+    background-color: #181a20;
+}

@@ -1,0 +1,32 @@
+
+.categories {
+    width: 75vw;
+    gap: 2em;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.category {
+    background-color: #262a34;
+    padding: 1em;
+    border-radius: 0.75rem;
+    cursor: pointer;
+}
+
+.category-name {
+    font-size: 1.5em;
+}
+
+.category-used, .category-gain {
+    font-size: 1em;
+}
+
+.category-nothing {
+    font-size: 1em;
+    color: #cccccc;
+}
+
+.add-category {
+
+}

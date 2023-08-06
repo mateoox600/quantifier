@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  database:
+    image: neo4j
+    environment:
+      NEO4J_AUTH: 'neo4j/development'
+    ports:
+      - 6474:7474
+      - 6687:7687
