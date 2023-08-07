@@ -19,17 +19,19 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/gain/monthly', async (req, res) => {
-    res.send({ gain: await Amount.getAllMonthlyGains() });
+    res.send({ gain: await Amount.getAllMonthlyGains(0) });
 });
 
 app.get('/used/monthly', async (req, res) => {
-    res.send({ used: await Amount.getAllMonthlyUsed() });
+    res.send({ used: await Amount.getAllMonthlyUsed(0) });
 });
 
 app.get('/total/monthly', async (req, res) => {
 
-    const gain = await Amount.getAllMonthlyGainsTotal();
-    const used = await Amount.getAllMonthlyUsedTotal();
+    const offset = Number(req.query['offset']) || 0;
+
+    const gain = await Amount.getAllMonthlyGainsTotal(offset);
+    const used = await Amount.getAllMonthlyUsedTotal(offset);
 
     const plannedGain = await Amount.getAllMonthlyGainPlannedTotal();
     const plannedUsed = await Amount.getAllMonthlyUsedPlannedTotal();

@@ -6,6 +6,17 @@
     gap: 2em;
 }
 
+.offset-container {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin: 1em;
+}
+
+.offset-date {
+    font-size: 1.5em;
+}
+
 .used-label {
     display: flex;
     gap: 1em;

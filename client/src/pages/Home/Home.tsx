@@ -9,6 +9,7 @@ import CategoryList from '../../components/CategoryList/CategoryList';
 import CategoryPopUp from '../../components/CategoryPopUp/CategoryPopUp';
 import AmountPopUp from '../../components/AmountPopUp/AmountPopUp';
 import InfoGauge from '../../components/InfoGauge/InfoGauge';
+import { MonthMap } from '../../utils/Date';
 
 export default function Home() {
 
@@ -17,8 +18,9 @@ export default function Home() {
     const [ creationCategoryPopUp, setCreationCategoryPopUp ] = useState(false);
     const [ editedCategory, setEditedCategory ] = useState<string | undefined>();
 
-    // State to refresh the total state
-    const [ refresh, setRefresh ] = useState(true);
+    // The month offset and the current text date
+    const [ offset, setOffset ] = useState(0);
+    const [ date, setDate ] = useState('');
 
     // Stores the total amounts and the widths required by the info gauge
     const [ total, setTotal ] = useState<Total>({ gain: 0, used: 0, plannedGain: 0, plannedUsed: 0, left: 0 });
@@ -32,13 +34,11 @@ export default function Home() {
 
     // Fetches the total, when refresh is true
     useEffect(() => {
-        if(!refresh) return;
-        setRefresh(false);
-        fetch('/api/total/monthly')
+        fetch(`/api/total/monthly?offset=${offset}`)
             .then((res) => res.json())
             .then((total) => setTotal(total))
             .catch((err) => console.error(err))
-    }, [ refresh ]);
+    }, [ offset ]);
 
     // Caculates the width for the info gauge when total changes
     useEffect(() => {
@@ -49,16 +49,25 @@ export default function Home() {
         else setGaugeGainWidth((total.plannedGain + total.gain) / (total.plannedUsed + total.used) * 100);
     }, [ total ]);
 
+    // Creates the date string from the month offset
+    useEffect(() => {
+        const date = new Date();
+        date.setUTCDate(1);
+        date.setUTCHours(0, 0, 0, 0);
+        date.setUTCMonth(date.getUTCMonth() + (offset ?? 0));
+        setDate(`${MonthMap[date.getUTCMonth()]} ${date.getUTCFullYear()}`);
+    }, [ offset ]);
+
     // When the category tree changes, refetch the new category, and it's childs
     useEffect(() => {
-        fetch(`/api/category/${(currentCategoryTree[currentCategoryTree.length - 1] ?? { uuid: 'main' }).uuid}/tree`)
+        fetch(`/api/category/${(currentCategoryTree[currentCategoryTree.length - 1] ?? { uuid: 'main' }).uuid}/tree?offset=${offset}`)
             .then((res) => res.json())
             .then((data) => {
                 setCurrentCategory(data);
                 setCategories(data.subCategories);
             })
             .catch((err) => console.error(err));
-    }, [ currentCategoryTree ]);
+    }, [ currentCategoryTree, offset ]);
 
     // Sets the edited category to the current category, and opens the creation category pop up
     const editCurrentCategory = () => {
@@ -73,7 +82,7 @@ export default function Home() {
                 currentCategory={ currentCategoryTree[currentCategoryTree.length - 1] } // Current category
                 close={ () => setCreationAmountPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
-                    setRefresh(true);
+                    setOffset((offset) => offset);
                     setCurrentCategoryTree((c) => [ ...c ]);
                 } }
                 back={ // Goes back one category in the category tree
@@ -87,13 +96,19 @@ export default function Home() {
                 category={ editedCategory } // Uuid of the currently edited category
                 close={ () => setCreationCategoryPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
-                    setRefresh(true);
+                    setOffset((offset) => offset);
                     setCurrentCategoryTree((c) => [ ...c ]);
                 } }
                 back={ // Goes back one category in the category tree
                     () => setCurrentCategoryTree((categoryTree) => categoryTree.slice(0, categoryTree.length - 1))
                 }
             /> }
+
+            <div className={ styles['offset-container'] }>
+                <p onClick={ () => setOffset((offset) => offset - 1) }>&lt;</p>
+                <p className={ styles['offset-date'] }>{ date }</p>
+                <p onClick={ () => setOffset((offset) => offset + 1) }>&gt;</p>
+            </div>
 
             { /* Label used to display total used in current category, and button to add new amount to that category */ }
             <div className={ styles['used-label'] }>

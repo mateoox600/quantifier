@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from './List.module.scss';
 import { Link } from 'react-router-dom';
+import { MonthMap } from '../../utils/Date';
 
 export interface Amount {
     uuid: string,
@@ -13,29 +14,40 @@ export interface Amount {
 
 export default function List() {
 
-    const [ refresh, setRefresh ] = useState(true);
     const [ amounts, setAmounts ] = useState<Amount[]>([]);
 
+    const [ offset, setOffset ] = useState(0);
+    const [ date, setDate ] = useState('');
+
     useEffect(() => {
-        if(!refresh) return;
-        setRefresh(false);
-        fetch('/api/amount/monthly/all')
+        fetch(`/api/amount/monthly/all?offset=${offset}`)
             .then((res) => res.json())
             .then((amounts) => setAmounts(amounts))
             .catch((err) => console.error(err));
-    }, [ refresh ]);
+    }, [ offset ]);
+
+    useEffect(() => {
+        const date = new Date();
+        date.setUTCDate(1);
+        date.setUTCHours(0, 0, 0, 0);
+        date.setUTCMonth(date.getUTCMonth() + (offset ?? 0));
+        setDate(`${MonthMap[date.getUTCMonth()]} ${date.getUTCFullYear()}`);
+    }, [ offset ]);
 
     const deleteAmount = (uuid: string) => {
         fetch(`/api/amount/${uuid}/`, {
             method: 'DELETE'
         }).then(() => {
-            setRefresh(true);
+            setOffset((offset) => offset);
         }).catch((err) => console.error(err));
     }
 
     return (
         <div className={ styles.list }>
-            <table className={ styles.table } border={ 1 }>
+            <p onClick={ () => setOffset((offset) => offset - 1) }>&lt;</p>
+            <p>{ date }</p>
+            <p onClick={ () => setOffset((offset) => offset + 1) }>&gt;</p>
+            <table className={ styles.table }>
                 <tr>
                     <th>Amount</th>
                     <th>Gain or Used</th>

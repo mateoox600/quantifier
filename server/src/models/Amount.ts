@@ -30,32 +30,34 @@ export default class Amount {
         return amounts.records.map((record) => record.get('amount').properties);
     }
 
-    public static async getAllMonthly(): Promise<DataAmount[]> {
+    public static async getAllMonthly(offset?: number): Promise<DataAmount[]> {
         const start = new Date();
         start.setUTCDate(1);
         start.setUTCHours(0, 0, 0, 0);
+        start.setUTCMonth(start.getUTCMonth() + (offset ?? 0));
         const startDateTime = start.getTime();
         
         const end = new Date();
-        end.setUTCMonth(start.getUTCMonth() + 1, 1);
+        end.setUTCFullYear(start.getUTCFullYear(), start.getUTCMonth() + 1, 1);
         end.setUTCHours(0, 0, 0, 0);
         const endDateTime = end.getTime();
     
         const session = driver.session();
-        const amounts = await session.run('MATCH (amount:Amount) WHERE amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime RETURN amount', { startDateTime, endDateTime });
+        const amounts = await session.run('MATCH (amount:Amount) WHERE (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned="monthly" AND amount.dateTime<=$startDateTime) RETURN amount', { startDateTime, endDateTime });
         session.close();
 
         return amounts.records.map((record) => record.get('amount').properties);
     }
 
-    public static async getAllMonthlyGains(): Promise<DataAmount[]> {
+    public static async getAllMonthlyGains(offset: number): Promise<DataAmount[]> {
         const start = new Date();
         start.setUTCDate(1);
         start.setUTCHours(0, 0, 0, 0);
+        start.setUTCMonth(start.getUTCMonth() + (offset ?? 0));
         const startDateTime = start.getTime();
         
         const end = new Date();
-        end.setUTCMonth(start.getUTCMonth() + 1, 1);
+        end.setUTCFullYear(start.getUTCFullYear(), start.getUTCMonth() + 1, 1);
         end.setUTCHours(0, 0, 0, 0);
         const endDateTime = end.getTime();
     
@@ -66,19 +68,20 @@ export default class Amount {
         return gains.records.map((record) => record.get('amount').properties);
     }
 
-    public static async getAllMonthlyGainsTotal() {
-        const total = (await this.getAllMonthlyGains()).reduce((acc, gain) => acc + gain.amount, 0);
+    public static async getAllMonthlyGainsTotal(offset: number) {
+        const total = (await this.getAllMonthlyGains(offset)).reduce((acc, gain) => acc + gain.amount, 0);
         return total;
     }
 
-    public static async getAllMonthlyUsed(): Promise<DataAmount[]> {    
+    public static async getAllMonthlyUsed(offset: number): Promise<DataAmount[]> {    
         const start = new Date();
         start.setUTCDate(1);
         start.setUTCHours(0, 0, 0, 0);
+        start.setUTCMonth(start.getUTCMonth() + (offset ?? 0));
         const startDateTime = start.getTime();
         
         const end = new Date();
-        end.setUTCMonth(start.getUTCMonth() + 1, 1);
+        end.setUTCFullYear(start.getUTCFullYear(), start.getUTCMonth() + 1, 1);
         end.setUTCHours(0, 0, 0, 0);
         const endDateTime = end.getTime();
     
@@ -89,8 +92,8 @@ export default class Amount {
         return useds.records.map((record) => record.get('amount').properties);
     }
 
-    public static async getAllMonthlyUsedTotal() {
-        const total = (await this.getAllMonthlyUsed()).reduce((acc, used) => acc + used.amount, 0);
+    public static async getAllMonthlyUsedTotal(offset: number) {
+        const total = (await this.getAllMonthlyUsed(offset)).reduce((acc, used) => acc + used.amount, 0);
         return total;
     }
 

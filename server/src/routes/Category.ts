@@ -10,7 +10,7 @@ router.get('/:uuid/', async (req, res) => {
 });
 
 router.get('/:uuid/tree', async (req, res) => {
-    const category = await Category.getCategoryTreeWithAmountCalculated(req.params.uuid);
+    const category = await Category.getCategoryTreeWithAmountCalculated(req.params.uuid, Number(req.query.offset) || 0);
     if(!category) return res.sendStatus(404);
     res.send(category);
 });

@@ -10,15 +10,15 @@ router.get('/', async (req, res) => {
 
 router.get('/monthly', async (req, res) => {
     res.send({
-        gain: await Amount.getAllMonthlyGains(),
-        used: await Amount.getAllMonthlyUsed(),
+        gain: await Amount.getAllMonthlyGains(0),
+        used: await Amount.getAllMonthlyUsed(0),
         plannedGain: await Amount.getAllMonthlyGainPlanned(),
         plannedUsed: await Amount.getAllMonthlyUsedPlanned()
     });
 });
 
 router.get('/monthly/all', async (req, res) => {
-    res.send(await Amount.getAllMonthly());
+    res.send(await Amount.getAllMonthly(Number(req.query['offset'] ?? '') || undefined));
 });
 
 router.get('/monthly/tree/:uuid/', async (req, res) => {

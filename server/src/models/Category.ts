@@ -40,15 +40,27 @@ export default class Category {
         return category.records.length > 0 ? category.records[0].get('category').properties : null;
     }
 
-    public static async getWithAmountCalculated(uuid: string): Promise<DataCategoryWithAmountCalculated> {
+    public static async getWithAmountCalculated(uuid: string, offset: number): Promise<DataCategoryWithAmountCalculated> {
+
+        const start = new Date();
+        start.setUTCDate(1);
+        start.setUTCHours(0, 0, 0, 0);
+        start.setUTCMonth(start.getUTCMonth() + (offset ?? 0));
+        const startDateTime = start.getTime();
+        
+        const end = new Date();
+        end.setUTCFullYear(start.getUTCFullYear(), start.getUTCMonth() + 1, 1);
+        end.setUTCHours(0, 0, 0, 0);
+        const endDateTime = end.getTime();
+
         const category = await this.get(uuid);
 
         const session = driver.session();
         const amountsQuery = await session.run(`
                 MATCH (category:Category)-[*1..]-(amount:Amount)
-                WHERE category.uuid=$uuid
+                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned="monthly" AND amount.dateTime<=$startDateTime)
                 RETURN amount
-            `, { uuid: category.uuid });
+            `, { uuid: category.uuid, startDateTime, endDateTime });
         session.close();
 
         const amounts = amountsQuery.records.map((record) => record.get('amount').properties) as DataAmount[];
@@ -151,7 +163,7 @@ export default class Category {
         };
     }
     
-    public static async getCategoryTreeWithAmountCalculated(uuid: string): Promise<DataCategoryTreeWithSubCategoryWithAmountCalculated | null> {
+    public static async getCategoryTreeWithAmountCalculated(uuid: string, offset: number): Promise<DataCategoryTreeWithSubCategoryWithAmountCalculated | null> {
 
         const session = driver.session();
 
@@ -176,8 +188,19 @@ export default class Category {
                 name: 'Main',
                 subCategories: []
             };
-            else return { subCategories: [], ...await this.getWithAmountCalculated(uuid) };
+            else return { subCategories: [], ...await this.getWithAmountCalculated(uuid, offset) };
         }
+
+        const start = new Date();
+        start.setUTCDate(1);
+        start.setUTCHours(0, 0, 0, 0);
+        start.setUTCMonth(start.getUTCMonth() + (offset ?? 0));
+        const startDateTime = start.getTime();
+        
+        const end = new Date();
+        end.setUTCFullYear(start.getUTCFullYear(), start.getUTCMonth() + 1, 1);
+        end.setUTCHours(0, 0, 0, 0);
+        const endDateTime = end.getTime();
 
         const mainCategory = uuid !== 'main' ? result.records[0].get('category').properties : {
             name: 'Main',
@@ -186,9 +209,9 @@ export default class Category {
 
         const mainAmountsQuery = await session.run(`
                 MATCH (category:Category)-[*1..]-(amount:Amount)
-                WHERE category.uuid=$uuid
+                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned="monthly" AND amount.dateTime<=$startDateTime)
                 RETURN amount
-            `, { uuid: mainCategory.uuid });
+            `, { uuid: mainCategory.uuid, startDateTime, endDateTime });
 
         const mainAmounts = mainAmountsQuery.records.map((record) => record.get('amount').properties) as DataAmount[];
 
@@ -205,9 +228,9 @@ export default class Category {
             const amountsQuery = await session.run(`
                 MATCH (category:Category)<-[*0..]-(sub:Category)
                 MATCH (sub)-[:AmountHasCategory]-(amount:Amount)
-                WHERE category.uuid=$uuid
+                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned="monthly" AND amount.dateTime<=$startDateTime)
                 RETURN amount
-            `, { uuid: subCategory.uuid });
+            `, { uuid: subCategory.uuid, startDateTime, endDateTime });
 
             const amounts = amountsQuery.records.map((record) => record.get('amount').properties) as DataAmount[];
 
