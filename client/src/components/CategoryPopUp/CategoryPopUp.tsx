@@ -21,7 +21,7 @@ export default function CategoryPopUp({
     // The data of the current edited category (not used if creating a category)
     const [ categoryData, setCategoryData ] = useState<Category>({ name: '', uuid: '' });
 
-    // If the category prop is set, we fetch the category that needs editing and we set the categoryDate state to the response from the server
+    // If the category prop is set, we fetch the category that needs editing and we set the categoryData state to the response from the server
     useEffect(() => {
         if(!category) return;
         fetch(`/api/category/${category}`).then((res) => res.json())

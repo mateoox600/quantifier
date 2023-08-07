@@ -2,19 +2,14 @@ import { useEffect, useState } from 'react';
 import styles from './List.module.scss';
 import { Link } from 'react-router-dom';
 import { MonthMap } from '../../utils/Date';
-
-export interface Amount {
-    uuid: string,
-    amount: number,
-    gain: boolean,
-    planned: string,
-    dateTime: number,
-    description: string
-}
+import AmountPopUp from '../../components/AmountPopUp/AmountPopUp';
+import { Amount } from '../../utils/Amount';
 
 export default function List() {
 
     const [ amounts, setAmounts ] = useState<Amount[]>([]);
+
+    const [ editing, setEditing ] = useState('');
 
     const [ offset, setOffset ] = useState(0);
     const [ date, setDate ] = useState('');
@@ -34,16 +29,15 @@ export default function List() {
         setDate(`${MonthMap[date.getUTCMonth()]} ${date.getUTCFullYear()}`);
     }, [ offset ]);
 
-    const deleteAmount = (uuid: string) => {
-        fetch(`/api/amount/${uuid}/`, {
-            method: 'DELETE'
-        }).then(() => {
-            setOffset((offset) => offset);
-        }).catch((err) => console.error(err));
-    }
-
     return (
         <div className={ styles.list }>
+            { editing !== '' && <AmountPopUp
+                currentCategory={ { name: 'Main', uuid: 'main' } }
+                amount={ editing }
+                close={ () => setEditing('') }
+                refresh={ () => setOffset((offset) => offset) }
+                back={ () => {} }
+            /> }
             <p onClick={ () => setOffset((offset) => offset - 1) }>&lt;</p>
             <p>{ date }</p>
             <p onClick={ () => setOffset((offset) => offset + 1) }>&gt;</p>
@@ -64,7 +58,7 @@ export default function List() {
                             <td>{ amount.planned === 'monthly' ? 'Yes' : 'No' }</td>
                             <td>{ new Date(amount.dateTime).toUTCString() }</td>
                             <td>{ amount.description }</td>
-                            <td><button onClick={ () => deleteAmount(amount.uuid) }>Delete...</button></td>
+                            <td><button onClick={ () => setEditing(amount.uuid) }>Edit...</button></td>
                         </tr>
                     ))
                 }
