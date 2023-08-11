@@ -48,7 +48,7 @@ export default class Category {
         const session = driver.session();
         const amountsQuery = await session.run(`
                 MATCH (category:Category)-[*1..]-(amount:Amount)
-                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned="monthly" AND amount.dateTime<=$startDateTime)
+                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned=true AND amount.dateTime<=$endDateTime)
                 RETURN amount
             `, { uuid: category.uuid, startDateTime, endDateTime });
         session.close();
@@ -56,10 +56,10 @@ export default class Category {
         // Filters and reduce them for used, planned used, gains and planned gains
         const amounts = amountsQuery.records.map((record) => record.get('amount').properties) as DataAmount[];
 
-        const used = amounts.filter((a) => a.gain == false && a.planned === 'no').reduce((acc, a) => acc + a.amount, 0);
-        const plannedUsed = amounts.filter((a) => a.gain == false && a.planned === 'monthly').reduce((acc, a) => acc + a.amount, 0);
-        const gain = amounts.filter((a) => a.gain == true && a.planned === 'no').reduce((acc, a) => acc + a.amount, 0);
-        const plannedGain = amounts.filter((a) => a.gain == true && a.planned === 'monthly').reduce((acc, a) => acc + a.amount, 0);
+        const used = amounts.filter((a) => a.gain == false && !a.planned).reduce((acc, a) => acc + a.amount, 0);
+        const plannedUsed = amounts.filter((a) => a.gain == false && a.planned).reduce((acc, a) => acc + a.amount, 0);
+        const gain = amounts.filter((a) => a.gain == true && !a.planned).reduce((acc, a) => acc + a.amount, 0);
+        const plannedGain = amounts.filter((a) => a.gain == true && a.planned).reduce((acc, a) => acc + a.amount, 0);
         
         // Calculate left overs
         const left = (gain + plannedGain) - (used + plannedUsed);
@@ -117,7 +117,7 @@ export default class Category {
             const amountsQuery = await session.run(`
                 MATCH (category:Category)<-[*0..]-(sub:Category)
                 MATCH (sub)-[:AmountHasCategory]-(amount:Amount)
-                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned="monthly" AND amount.dateTime<=$startDateTime)
+                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned=true AND amount.dateTime<=$endDateTime)
                 RETURN amount
             `, { uuid: subCategory.uuid, startDateTime, endDateTime });
 
@@ -125,10 +125,10 @@ export default class Category {
             const amounts = amountsQuery.records.map((record) => record.get('amount').properties) as DataAmount[];
 
             // Then we filter and reduce them to get the used, planned used, gains and planned gains of the sub category
-            const used = amounts.filter((a) => a.gain == false && a.planned === 'no').reduce((acc, a) => acc + a.amount, 0);
-            const plannedUsed = amounts.filter((a) => a.gain == false && a.planned === 'monthly').reduce((acc, a) => acc + a.amount, 0);
-            const gain = amounts.filter((a) => a.gain == true && a.planned === 'no').reduce((acc, a) => acc + a.amount, 0);
-            const plannedGain = amounts.filter((a) => a.gain == true && a.planned === 'monthly').reduce((acc, a) => acc + a.amount, 0);
+            const used = amounts.filter((a) => a.gain == false && !a.planned).reduce((acc, a) => acc + a.amount, 0);
+            const plannedUsed = amounts.filter((a) => a.gain == false && a.planned).reduce((acc, a) => acc + a.amount, 0);
+            const gain = amounts.filter((a) => a.gain == true && !a.planned).reduce((acc, a) => acc + a.amount, 0);
+            const plannedGain = amounts.filter((a) => a.gain == true && a.planned).reduce((acc, a) => acc + a.amount, 0);
             
             // We calculate the left overs
             const left = (gain + plannedGain) - (used + plannedUsed);

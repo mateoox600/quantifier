@@ -1,4 +1,5 @@
 
+// Map for each month of the year (start at 0 because of js weirdness)
 export const MonthMap: Record<number, string> = {
     0: 'January',
     1: 'Febuary',

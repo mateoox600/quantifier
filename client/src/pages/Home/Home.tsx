@@ -104,6 +104,7 @@ export default function Home() {
                 }
             /> }
 
+            { /* Displays the button to go back and go forward one month, and dispalys the current date */ }
             <div className={ styles['offset-container'] }>
                 <p onClick={ () => setOffset((offset) => offset - 1) }>&lt;</p>
                 <p className={ styles['offset-date'] }>{ date }</p>

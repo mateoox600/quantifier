@@ -26,7 +26,7 @@ router.get('/:uuid/', async (req, res) => {
     amount: number,
     dateTime: number, // Can be -1 so that Date.now() be used
     gain: boolean,
-    planned: 'no' | 'monthly',
+    planned: boolean,
     description: string,
     category: string // Optional, uuid of the parent category
 }
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
     const {
         amount: amountStr,
         dateTime: dateTimeStr,
-        gain: gainStr,
+        gain,
         planned,
         description
     } = req.body;
@@ -50,18 +50,14 @@ router.post('/', async (req, res) => {
     // Tries to get the parent category from the body, if it doesn't exists defaults to null
     const category = ('category' in req.body) ? req.body.category : null;
 
-    // Converts the amount and dateTime to numbers, also convers the gain string to a boolean
+    // Converts the amount and dateTime to numbers
     const amount = Number(amountStr);
     let dateTime = Number(dateTimeStr);
-    const gain = gainStr === 'true' ? true : false;
 
     // Ensure the amount is a number and is more than 0
     if(isNaN(amount) || amount < 1) return res.sendStatus(400);
     // If the dateTime is not a number or is under 1 we set it to the current time
     if(isNaN(dateTime) || dateTime < 1) dateTime = Date.now();
-
-    // Checking that the planned properties is one of plannedPossibilities
-    if(!Amount.plannedPossibilities.includes(planned)) return res.sendStatus(400);
 
     const amountObject = await Amount.create({
         amount, dateTime, description, gain, planned
@@ -77,7 +73,7 @@ router.post('/', async (req, res) => {
     amount: number,
     dateTime: number, // Can be -1 so that Date.now() be used
     gain: boolean,
-    planned: 'no' | 'monthly',
+    planned: boolean,
     description: string
 }
 */
@@ -94,23 +90,19 @@ router.post('/edit', async (req, res) => {
         uuid,
         amount: amountStr,
         dateTime: dateTimeStr,
-        gain: gainStr,
+        gain,
         planned,
         description
     } = req.body;
 
-    // Converts the amount and dateTime to numbers, also convers the gain string to a boolean
+    // Converts the amount and dateTime to numbers
     const amount = Number(amountStr);
     let dateTime = Number(dateTimeStr);
-    const gain = gainStr === 'true' ? true : false;
 
     // Ensure the amount is a number and is more than 0
     if(isNaN(amount) || amount < 1) return res.sendStatus(400);
     // If the dateTime is not a number or is under 1 we set it to the current time
     if(isNaN(dateTime) || dateTime < 1) dateTime = Date.now();
-
-    // Checking that the planned properties is one of plannedPossibilities
-    if(!Amount.plannedPossibilities.includes(planned)) return res.sendStatus(400);
 
     const amountObject = await Amount.edit({
         uuid, amount, dateTime, description, gain, planned

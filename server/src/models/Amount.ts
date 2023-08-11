@@ -8,15 +8,11 @@ export interface DataAmount {
     amount: number,
     dateTime: number,
     gain: boolean,
-    planned: 'no' | 'monthly',
+    planned: boolean,
     description: string
 }
 
 export default class Amount {
-
-    public static plannedPossibilities = [
-        'no', 'monthly'
-    ];
 
     // Gets the amount via it's uuid, if it's not found returns null
     public static async get(uuid: string): Promise<DataAmount> {
@@ -39,10 +35,20 @@ export default class Amount {
         const { start: startDateTime, end: endDateTime } = getMonthStartAndEnd(offset);
     
         const session = driver.session();
-        const amounts = await session.run('MATCH (amount:Amount) WHERE (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned="monthly" AND amount.dateTime<=$startDateTime) RETURN amount', { startDateTime, endDateTime });
+        const amounts = await session.run(`
+            MATCH (amount:Amount)
+            OPTIONAL MATCH (amount)-[:AmountHasCategory]->(category:Category)
+            WHERE (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned=true AND amount.dateTime<=$endDateTime)
+            RETURN amount, category
+        `, { startDateTime, endDateTime });
         session.close();
 
-        return amounts.records.map((record) => record.get('amount').properties);
+        return amounts.records.map((record) => {
+            return {
+                ...record.get('amount').properties,
+                parent: (record.get('category') ?? { properties: { name: 'Main', uuid: 'main' } }).properties
+            };
+        });
     }
 
     // Gets all gains amounts for a month with an offset
@@ -50,7 +56,7 @@ export default class Amount {
         const { start: startDateTime, end: endDateTime } = getMonthStartAndEnd(offset);
     
         const session = driver.session();
-        const gains = await session.run('MATCH (amount:Amount) WHERE amount.gain=true AND amount.planned="no" AND amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime RETURN amount', { startDateTime, endDateTime });
+        const gains = await session.run('MATCH (amount:Amount) WHERE amount.gain=true AND amount.planned=false AND amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime RETURN amount', { startDateTime, endDateTime });
         session.close();
 
         return gains.records.map((record) => record.get('amount').properties);
@@ -67,7 +73,7 @@ export default class Amount {
         const { start: startDateTime, end: endDateTime } = getMonthStartAndEnd(offset);
     
         const session = driver.session();
-        const useds = await session.run('MATCH (amount:Amount) WHERE amount.gain=false AND amount.planned="no" AND amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime RETURN amount', { startDateTime, endDateTime });
+        const useds = await session.run('MATCH (amount:Amount) WHERE amount.gain=false AND amount.planned=false AND amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime RETURN amount', { startDateTime, endDateTime });
         session.close();
 
         return useds.records.map((record) => record.get('amount').properties);
@@ -81,9 +87,9 @@ export default class Amount {
 
     // Gets all planned gains amounts for a month with an offset
     public static async getAllMonthlyGainPlanned(offset: number): Promise<DataAmount[]> {
-        const { start: startDateTime } = getMonthStartAndEnd(offset);
+        const { end: endDateTime } = getMonthStartAndEnd(offset);
         const session = driver.session();
-        const gains = await session.run('MATCH (amount:Amount) WHERE amount.gain=true AND amount.planned="monthly" AND amount.dateTime<=$startDateTime RETURN amount', { startDateTime });
+        const gains = await session.run('MATCH (amount:Amount) WHERE amount.gain=true AND amount.planned=true AND amount.dateTime<=$endDateTime RETURN amount', { endDateTime });
         session.close();
 
         return gains.records.map((record) => record.get('amount').properties);
@@ -97,9 +103,9 @@ export default class Amount {
 
     // Gets all planned used amounts for a month with an offset
     public static async getAllMonthlyUsedPlanned(offset: number): Promise<DataAmount[]> {
-        const { start: startDateTime } = getMonthStartAndEnd(offset);
+        const { end: endDateTime } = getMonthStartAndEnd(offset);
         const session = driver.session();
-        const useds = await session.run('MATCH (amount:Amount) WHERE amount.gain=false AND amount.planned="monthly" AND amount.dateTime<=$startDateTime RETURN amount', { startDateTime });
+        const useds = await session.run('MATCH (amount:Amount) WHERE amount.gain=false AND amount.planned=true AND amount.dateTime<=$endDateTime RETURN amount', { endDateTime });
         session.close();
 
         return useds.records.map((record) => record.get('amount').properties);

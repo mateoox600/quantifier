@@ -3,11 +3,11 @@ import styles from './List.module.scss';
 import { Link } from 'react-router-dom';
 import { MonthMap } from '../../utils/Date';
 import AmountPopUp from '../../components/AmountPopUp/AmountPopUp';
-import { Amount } from '../../utils/Amount';
+import { AmountWithParent } from '../../utils/Amount';
 
 export default function List() {
 
-    const [ amounts, setAmounts ] = useState<Amount[]>([]);
+    const [ amounts, setAmounts ] = useState<AmountWithParent[]>([]);
 
     const [ editing, setEditing ] = useState('');
 
@@ -42,26 +42,30 @@ export default function List() {
             <p>{ date }</p>
             <p onClick={ () => setOffset((offset) => offset + 1) }>&gt;</p>
             <table className={ styles.table }>
-                <tr>
-                    <th>Amount</th>
-                    <th>Gain or Used</th>
-                    <th>Planned ?</th>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th></th>
-                </tr>
-                {
-                    amounts.map((amount) => (
-                        <tr>
-                            <td>{ amount.amount }€</td>
-                            <td>{ amount.gain ? 'Gain' : 'Used' }</td>
-                            <td>{ amount.planned === 'monthly' ? 'Yes' : 'No' }</td>
-                            <td>{ new Date(amount.dateTime).toUTCString() }</td>
-                            <td>{ amount.description }</td>
-                            <td><button onClick={ () => setEditing(amount.uuid) }>Edit...</button></td>
-                        </tr>
-                    ))
-                }
+                <tbody>
+                    <tr>
+                        <th>Amount</th>
+                        <th>Gain or Used</th>
+                        <th>Planned ?</th>
+                        <th>Date</th>
+                        <th>Parent Category</th>
+                        <th>Description</th>
+                        <th></th>
+                    </tr>
+                    {
+                        amounts.map((amount) => (
+                            <tr key={ amount.uuid }>
+                                <td>{ amount.amount }€</td>
+                                <td>{ amount.gain ? 'Gain' : 'Used' }</td>
+                                <td>{ amount.planned ? 'Yes' : 'No' }</td>
+                                <td>{ new Date(amount.dateTime).toUTCString() }</td>
+                                <td>{ amount.parent.name }</td>
+                                <td>{ amount.description }</td>
+                                <td><button onClick={ () => setEditing(amount.uuid) }>Edit...</button></td>
+                            </tr>
+                        ))
+                    }
+                </tbody>
             </table>
             <Link to={ '/' } className={ styles['to-home'] }>...</Link>
         </div>
