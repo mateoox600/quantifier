@@ -18,14 +18,7 @@ export const driver = neo4j.driver(
 app.use(cors());
 app.use(express.json());
 
-app.get('/gain/monthly', async (req, res) => {
-    res.send({ gain: await Amount.getAllMonthlyGains(0) });
-});
-
-app.get('/used/monthly', async (req, res) => {
-    res.send({ used: await Amount.getAllMonthlyUsed(0) });
-});
-
+// Used to get used amounts totals, gains amounts totals and left overs
 app.get('/total/monthly', async (req, res) => {
 
     const offset = Number(req.query['offset']) || 0;
@@ -33,8 +26,8 @@ app.get('/total/monthly', async (req, res) => {
     const gain = await Amount.getAllMonthlyGainsTotal(offset);
     const used = await Amount.getAllMonthlyUsedTotal(offset);
 
-    const plannedGain = await Amount.getAllMonthlyGainPlannedTotal();
-    const plannedUsed = await Amount.getAllMonthlyUsedPlannedTotal();
+    const plannedGain = await Amount.getAllMonthlyGainPlannedTotal(offset);
+    const plannedUsed = await Amount.getAllMonthlyUsedPlannedTotal(offset);
 
     res.send({
         gain, used,

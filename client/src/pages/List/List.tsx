@@ -15,7 +15,7 @@ export default function List() {
     const [ date, setDate ] = useState('');
 
     useEffect(() => {
-        fetch(`/api/amount/monthly/all?offset=${offset}`)
+        fetch(`/api/amount/monthly?offset=${offset}`)
             .then((res) => res.json())
             .then((amounts) => setAmounts(amounts))
             .catch((err) => console.error(err));

@@ -2,8 +2,10 @@ import { envSchema } from './env';
 import { ZodError } from 'zod';
 import dotenv from 'dotenv';
 
+// Loads the env from the .env file
 dotenv.config();
 
+// If the .env format is not correct throw an error and exit the program
 try {
     envSchema.parse(process.env);
 }catch(err: unknown) {
