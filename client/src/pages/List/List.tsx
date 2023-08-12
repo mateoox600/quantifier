@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
-import styles from './List.module.scss';
 import { Link } from 'react-router-dom';
 import { MonthMap } from '../../utils/Date';
-import AmountPopUp from '../../components/AmountPopUp/AmountPopUp';
 import { AmountWithParent } from '../../utils/Amount';
+
+import styles from './List.module.scss';
+
+import AmountPopUp from '../../components/AmountPopUp/AmountPopUp';
+
+import ChevronLeft from '../../assets/chevron_left.svg';
+import ChevronRight from '../../assets/chevron_right.svg';
 
 export default function List() {
 
@@ -38,9 +43,11 @@ export default function List() {
                 refresh={ () => setOffset((offset) => offset) }
                 back={ () => {} }
             /> }
-            <p onClick={ () => setOffset((offset) => offset - 1) }>&lt;</p>
-            <p>{ date }</p>
-            <p onClick={ () => setOffset((offset) => offset + 1) }>&gt;</p>
+            <div className={ styles['offset-container'] }>
+                <img onClick={ () => setOffset((offset) => offset - 1) } src={ ChevronLeft } alt='<' />
+                <p className={ styles['offset-date'] }>{ date }</p>
+                <img onClick={ () => setOffset((offset) => offset + 1) } src={ ChevronRight } alt='>' />
+            </div>
             <table className={ styles.table }>
                 <tbody>
                     <tr>

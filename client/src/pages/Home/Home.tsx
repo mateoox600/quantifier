@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Total } from '../../utils/Amount';
 import { Category, CategoryWithAmounts } from '../../utils/Category';
+import { MonthMap } from '../../utils/Date';
 
 import styles from './Home.module.scss';
 
@@ -9,7 +10,12 @@ import CategoryList from '../../components/CategoryList/CategoryList';
 import CategoryPopUp from '../../components/CategoryPopUp/CategoryPopUp';
 import AmountPopUp from '../../components/AmountPopUp/AmountPopUp';
 import InfoGauge from '../../components/InfoGauge/InfoGauge';
-import { MonthMap } from '../../utils/Date';
+
+import ChevronLeft from '../../assets/chevron_left.svg';
+import ChevronRight from '../../assets/chevron_right.svg';
+import Add from '../../assets/add.svg';
+import Setting from '../../assets/settings.svg';
+import Sort from '../../assets/sort.svg';
 
 export default function Home() {
 
@@ -106,15 +112,15 @@ export default function Home() {
 
             { /* Displays the button to go back and go forward one month, and dispalys the current date */ }
             <div className={ styles['offset-container'] }>
-                <p onClick={ () => setOffset((offset) => offset - 1) }>&lt;</p>
+                <img onClick={ () => setOffset((offset) => offset - 1) } src={ ChevronLeft } alt="<" />
                 <p className={ styles['offset-date'] }>{ date }</p>
-                <p onClick={ () => setOffset((offset) => offset + 1) }>&gt;</p>
+                <img onClick={ () => setOffset((offset) => offset + 1) } src={ ChevronRight } alt=">" />
             </div>
 
             { /* Label used to display total used in current category, and button to add new amount to that category */ }
             <div className={ styles['used-label'] }>
                 <p className={ styles['used-label-content'] }>{ (currentCategory.used + currentCategory.plannedUsed) || 0 }€</p>
-                <button className={ styles['add-amount'] } onClick={ () => setCreationAmountPopUp(true) }>+</button>
+                <img className={ styles['add-amount'] } onClick={ () => setCreationAmountPopUp(true) } src={ Add } alt='+' />
             </div>
 
             { /* Styled info gauge to display used, and gain taking into account planned amounts */ }
@@ -126,11 +132,11 @@ export default function Home() {
 
             { /* Displays current category name, with optional back and edit button */ }
             <p className={ styles['current-category'] }>
-                { currentCategory.uuid !== 'main' && <button className={ styles['category-back'] } onClick={ () => setCurrentCategoryTree((categoryTree) => categoryTree.slice(0, categoryTree.length - 1)) }>&lt;</button> }
+                { currentCategory.uuid !== 'main' && <img className={ styles['category-back'] } onClick={ () => setCurrentCategoryTree((categoryTree) => categoryTree.slice(0, categoryTree.length - 1)) } src={ ChevronLeft } alt='<' /> }
                 {
                     currentCategoryTree.slice(0, -1).map((category) => category.name).join(' / ')
                 } / { currentCategory.uuid !== 'main' ? currentCategory.name : '' }
-                { currentCategory.uuid !== 'main' && <button className={ styles['category-delete'] } onClick={ () => editCurrentCategory() }>Edit</button> }
+                { currentCategory.uuid !== 'main' && <img className={ styles['category-delete'] } onClick={ () => editCurrentCategory() } src={ Setting } alt='Edit' /> }
             </p>
 
             { /* If we are not in the "Main" category, we display the used and gains of that specific category */ }
@@ -159,7 +165,9 @@ export default function Home() {
             />
 
             { /* Link used to go to the amount list page */ }
-            <Link to={ '/list' } className={ styles['to-list'] }>...</Link>
+            <Link to={ '/list' } className={ styles['to-list'] }>
+                <img src={ Sort } alt="..." />
+            </Link>
         </div>
     );
 }

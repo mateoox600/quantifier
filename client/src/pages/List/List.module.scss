@@ -1,12 +1,26 @@
 
+.list {
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2em;
+}
+
+.offset-container {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin: 1em;
+}
+
+.offset-date {
+    font-size: 1.5em;
+}
+
 table, th, td {
     border: 1px solid white;
     border-collapse: collapse;
-}
-
-.list {
-    width: 100vw;
-    overflow: hidden;
 }
 
 .table {

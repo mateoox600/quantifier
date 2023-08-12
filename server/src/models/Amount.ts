@@ -37,8 +37,8 @@ export default class Amount {
         const session = driver.session();
         const amounts = await session.run(`
             MATCH (amount:Amount)
-            OPTIONAL MATCH (amount)-[:AmountHasCategory]->(category:Category)
             WHERE (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned=true AND amount.dateTime<=$endDateTime)
+            OPTIONAL MATCH (amount)-[:AmountHasCategory]->(category:Category)
             RETURN amount, category
         `, { startDateTime, endDateTime });
         session.close();
