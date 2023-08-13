@@ -4,6 +4,7 @@ import { Category } from '../../utils/Category';
 
 export interface CategoryPopUpProps {
     currentCategory: Category,
+    project: string,
     category?: string,
     close: () => void,
     refresh: () => void,
@@ -12,6 +13,7 @@ export interface CategoryPopUpProps {
 
 export default function CategoryPopUp({
     currentCategory, // The current category (used to determine if the created category has a parent or not)
+    project,
     category, // Optional, the category that needs editing
     close, // A function called when the pop up needs to close itself
     refresh, // A function called when the pop up changed some things on the server, and the page probably needs a refresh
@@ -68,6 +70,7 @@ export default function CategoryPopUp({
 
         const formData = {
             name: form.get('name'),
+            project,
             parent: currentCategory?.uuid || null
         };
         

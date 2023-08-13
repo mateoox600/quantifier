@@ -3,14 +3,16 @@ import Amount from '../models/Amount';
 
 const router = Router();
 
-// Get all amounts
+// Get all amounts of a project
 router.get('/', async (req, res) => {
-    res.send(await Amount.getAll());
+    if(!req.query.project) return res.sendStatus(400);
+    res.send(await Amount.getAll(req.query.project as string));
 });
 
-// Get all monthly amounts
+// Get all monthly amounts of a project
 router.get('/monthly', async (req, res) => {
-    res.send(await Amount.getAllMonthly(Number(req.query.offset) || 0));
+    if(!req.query.project) return res.sendStatus(400);
+    res.send(await Amount.getAllMonthly(req.query.project as string, Number(req.query.offset) || 0));
 });
 
 // Get an amount via it's uuid
@@ -28,6 +30,7 @@ router.get('/:uuid/', async (req, res) => {
     gain: boolean,
     planned: boolean,
     description: string,
+    project: string, // Uuid of the current project
     category: string // Optional, uuid of the parent category
 }
 */
@@ -38,13 +41,15 @@ router.post('/', async (req, res) => {
     if(!('gain' in req.body)) return res.sendStatus(400);
     if(!('planned' in req.body)) return res.sendStatus(400);
     if(!('description' in req.body)) return res.sendStatus(400);
+    if(!('project' in req.body)) return res.sendStatus(400);
 
     const {
         amount: amountStr,
         dateTime: dateTimeStr,
         gain,
         planned,
-        description
+        description,
+        project
     } = req.body;
 
     // Tries to get the parent category from the body, if it doesn't exists defaults to null
@@ -61,7 +66,7 @@ router.post('/', async (req, res) => {
 
     const amountObject = await Amount.create({
         amount, dateTime, description, gain, planned
-    }, category);
+    }, project, category);
 
     res.send(amountObject);
 });
@@ -95,6 +100,9 @@ router.post('/edit', async (req, res) => {
         description
     } = req.body;
 
+    // Tries to get the end date time from the body, if it doesn't exists defaults to null
+    const endDateTime = ('endDateTime' in req.body) ? req.body.endDateTime : null;
+
     // Converts the amount and dateTime to numbers
     const amount = Number(amountStr);
     let dateTime = Number(dateTimeStr);
@@ -105,7 +113,7 @@ router.post('/edit', async (req, res) => {
     if(isNaN(dateTime) || dateTime < 1) dateTime = Date.now();
 
     const amountObject = await Amount.edit({
-        uuid, amount, dateTime, description, gain, planned
+        uuid, amount, dateTime, description, gain, planned, endDateTime
     });
 
     res.send(amountObject);

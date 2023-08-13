@@ -47,7 +47,7 @@ export default class Category {
         // Then it gets every amounts from this category and it's sub categories
         const session = driver.session();
         const amountsQuery = await session.run(`
-                MATCH (category:Category)-[*1..]-(amount:Amount)
+                MATCH (category:Category)<-[*1..]-(amount:Amount)
                 WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned=true AND amount.dateTime<=$endDateTime)
                 RETURN amount
             `, { uuid: category.uuid, startDateTime, endDateTime });
@@ -71,24 +71,24 @@ export default class Category {
         };
     }
 
-    public static async getCategoryTree(uuid: string, offset: number): Promise<DataCategoryTree | null> {
+    public static async getCategoryTree(uuid: string, project: string, offset: number): Promise<DataCategoryTree | null> {
 
         const session = driver.session();
 
         // Gets every sub categries for the category uuid passed
         // If the category is not main we get every category that has the current category as a parent
-        // Else we get every category without parent (= parent is main)
+        // Else we get every category with the project as a parent
         const query = uuid !== 'main' ? `
             MATCH (category:Category)<-[:HasParentCategory]-(sub_category:Category)
             WHERE category.uuid=$uuid
             RETURN category, sub_category
         ` : `
-            MATCH (sub_category:Category)
-            WHERE NOT (sub_category)-[:HasParentCategory]->(:Category)
+            MATCH (project:Project)<-[:HasParentProject]-(sub_category:Category)
+            WHERE project.uuid=$projectUuid
             RETURN sub_category
         `;
 
-        const result = await session.run(query, { uuid });
+        const result = await session.run(query, { uuid, projectUuid: project });
         
         // If no category is returned, then there are no sub categories, so we just return the current category and it's amounts
         if(result.records.length == 0) {
@@ -150,7 +150,7 @@ export default class Category {
         };
     }
 
-    public static async create(category: Omit<DataCategory, 'uuid'>, parent?: string) {
+    public static async create(category: Omit<DataCategory, 'uuid'>, project: string, parent?: string) {
         // First we define this object to add the generated uuid to the category
         const catagorieProperties: DataCategory = {
             ...category,
@@ -158,15 +158,19 @@ export default class Category {
         };
 
         // We then create the category
-        // If there are no parent we just create it (= to creating it with main as parent)
+        // If there are no parent we create it with a relation to the project
         // Else we create the category, with a relation to it's parent category
-        const query = !parent ? 'CREATE (category:Category $catagorieProperties)' : `
+        const query = !parent ? `
+            MATCH (project:Project)
+            WHERE project.uuid=$projectUuid
+            CREATE (category:Category $catagorieProperties)-[:HasParentProject]->(project)
+        ` : `
             MATCH (parent_category:Category)
             WHERE parent_category.uuid=$parent
             CREATE (category:Category $catagorieProperties)-[:HasParentCategory]->(parent_category)`;
 
         const session = driver.session();
-        await session.run(query, { catagorieProperties, parent });
+        await session.run(query, { catagorieProperties, parent, projectUuid: project });
         session.close();
 
         // We also return the properties of the just created category

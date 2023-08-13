@@ -3,12 +3,14 @@ import styles from './CategoryList.module.scss';
 
 export interface CategoryListProps {
     categories: CategoryWithAmounts[],
+    unit: string,
     categoryClick: (category: Category) => void,
     createCategoryClick: () => void
 }
 
 export default function CategoryList({
     categories, // The list of categories, also containing in each there amounts
+    unit,
     categoryClick, // A callback for the case that a category is clicked
     createCategoryClick // A callback for when the create category button is pressed
 }: CategoryListProps) {
@@ -20,10 +22,10 @@ export default function CategoryList({
                     return <div key={ category.uuid } className={ styles.category } onClick={ () => categoryClick(category) }>
                         <p className={ styles['category-name'] }>{ category.name }</p>
                         {
-                            category.gain + category.plannedGain != 0 && <p className={ styles['category-gain'] }>{ category.gain + category.plannedGain }€ Gain</p>
+                            category.gain + category.plannedGain != 0 && <p className={ styles['category-gain'] }>{ category.gain + category.plannedGain }{ unit } Gain</p>
                         }
                         {
-                            category.used + category.plannedUsed != 0 && <p className={ styles['category-used'] }>{ category.used + category.plannedUsed }€ Used</p>
+                            category.used + category.plannedUsed != 0 && <p className={ styles['category-used'] }>{ category.used + category.plannedUsed }{ unit } Used</p>
                         }
                         {
                             category.gain + category.plannedGain == 0 && category.used + category.plannedUsed == 0 && <p className={ styles['category-nothing'] }>Nothing</p>

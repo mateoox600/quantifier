@@ -7,6 +7,7 @@ export interface Amount {
     gain: boolean,
     planned: boolean,
     dateTime: number,
+    endDateTime?: number,
     description: string
 }
 

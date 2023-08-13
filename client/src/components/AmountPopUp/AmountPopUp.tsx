@@ -5,7 +5,9 @@ import { Amount } from '../../utils/Amount';
 
 export interface CategoryPopUpProps {
     currentCategory: Category,
+    project: string,
     amount?: string,
+    offset: number,
     close: () => void,
     refresh: () => void,
     back: () => void
@@ -18,14 +20,16 @@ function formatDate(date: Date) {
 
 export default function AmountPopUp({
     currentCategory, // The current category (used to determine if the created amount has a parent or not)
+    project,
     amount, // Optional, the amount that needs editing
+    offset, // Offset for the dateTime
     close, // A function called when the pop up needs to close itself
     refresh, // A function called when the pop up changed some things on the server, and the page probably needs a refresh
     back // A function called when the pop up needs to go back one category in the category tree
 }: CategoryPopUpProps) {
 
     // The data of the current edited amount (not used if creating an amount)
-    const [ amountData, setAmountData ] = useState<Amount>({ amount: 0, dateTime: -1, description: '', gain: false, planned: false, uuid: '' });
+    const [ amountData, setAmountData ] = useState<Amount>({ amount: 0, dateTime: -1, endDateTime: -1, description: '', gain: false, planned: false, uuid: '' });
 
     // If the amount prop is set, we fetch the amount that needs editing and we set the amountData state to the response from the server
     useEffect(() => {
@@ -75,6 +79,7 @@ export default function AmountPopUp({
             planned: form.get('planned') === 'on',
             dateTime: Date.parse((form.get('date') || '').toString()) || -1,
             description: form.get('description'),
+            project,
             category: currentCategory?.uuid || null
         };
         
@@ -129,9 +134,17 @@ export default function AmountPopUp({
                         <input type="checkbox" name="planned" id="planned" checked={ amountData.planned } onChange={ (e) => setAmountData((data) => { return { ...data, planned: e.target.checked }; }) } />
                     </div>
                     <div> { /* The date of the new amount or the new date of the edited amount, date is formated into a DD-MM-YYYY format to be compatible with the date input type */ }
-                        <label htmlFor="date">Date</label>
+                        <label htmlFor="date">{ amount && amountData.planned ? 'Start Date' : 'Date' }</label>
                         <input type="date" name="date" id="date" value={ formatDate(new Date(amountData.dateTime)) } onChange={ (e) => setAmountData((data) => { return { ...data, dateTime: Date.parse(e.target.value) }; }) } />
                     </div>
+                    {
+                        (amount && amountData.planned) && (
+                            <div>
+                                <label htmlFor="end">End Date</label>
+                                <input type="date" name='end' id='end' value={ formatDate(new Date(amountData.endDateTime || -1)) } onChange={ (e) => setAmountData((data) => { return { ...data, endDateTime: Date.parse(e.target.value) }; }) } />
+                            </div>
+                        )
+                    }
                     <div>
                         <label htmlFor="description">Description</label>
                         <input type="text" name="description" id="description" value={ amountData.description } onChange={ (e) => setAmountData((data) => { return { ...data, description: e.target.value }; }) } />

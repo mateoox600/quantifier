@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Total } from '../../utils/Amount';
 import { Category, CategoryWithAmounts } from '../../utils/Category';
 import { MonthMap } from '../../utils/Date';
+import { Project } from '../../utils/Project';
 
 import styles from './Home.module.scss';
 
@@ -16,8 +17,13 @@ import ChevronRight from '../../assets/chevron_right.svg';
 import Add from '../../assets/add.svg';
 import Setting from '../../assets/settings.svg';
 import Sort from '../../assets/sort.svg';
+import HomeIcon from '../../assets/home.svg';
 
 export default function Home() {
+
+    const { uuid: projectUuid } = useParams();
+
+    const [ project, setProject ] = useState<Project>({ uuid: '', name: '', unit: '' });
 
     // States to handle openned pop up, and editing category pop up
     const [ creationAmountPopUp, setCreationAmountPopUp ] = useState(false);
@@ -38,9 +44,16 @@ export default function Home() {
     const [ categories, setCategories ] = useState<CategoryWithAmounts[]>([]);
     const [ currentCategoryTree, setCurrentCategoryTree ] = useState<Category[]>([]);
 
+    useEffect(() => {
+        fetch(`/api/project/${projectUuid}`)
+            .then((res) => res.json())
+            .then((project) => setProject(project))
+            .catch((err) => console.error(err));
+    }, []);
+
     // Fetches the total, when refresh is true
     useEffect(() => {
-        fetch(`/api/total/monthly?offset=${offset}`)
+        fetch(`/api/total/monthly?project=${projectUuid}&offset=${offset}`)
             .then((res) => res.json())
             .then((total) => setTotal(total))
             .catch((err) => console.error(err))
@@ -66,7 +79,7 @@ export default function Home() {
 
     // When the category tree changes, refetch the new category, and it's childs
     useEffect(() => {
-        fetch(`/api/category/${(currentCategoryTree[currentCategoryTree.length - 1] ?? { uuid: 'main' }).uuid}/tree?offset=${offset}`)
+        fetch(`/api/category/${(currentCategoryTree[currentCategoryTree.length - 1] ?? { uuid: 'main' }).uuid}/tree?project=${projectUuid}&offset=${offset}`)
             .then((res) => res.json())
             .then((data) => {
                 setCurrentCategory(data);
@@ -83,9 +96,14 @@ export default function Home() {
 
     return (
         <div className={ styles.home }>
+            <Link to={ '/' } className={ styles['go-home'] }>
+                <img src={ HomeIcon } alt="Home" />
+            </Link>
             { /* Popup to create amounts */ }
             { creationAmountPopUp && <AmountPopUp
                 currentCategory={ currentCategoryTree[currentCategoryTree.length - 1] } // Current category
+                project={ projectUuid || '' }
+                offset={ offset }
                 close={ () => setCreationAmountPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
                     setOffset((offset) => offset);
@@ -99,6 +117,7 @@ export default function Home() {
             { /* Popup to create and edit categories */ }
             { creationCategoryPopUp && <CategoryPopUp
                 currentCategory={ currentCategoryTree[currentCategoryTree.length - 1] } // Current category
+                project={ projectUuid || '' }
                 category={ editedCategory } // Uuid of the currently edited category
                 close={ () => setCreationCategoryPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
@@ -110,6 +129,8 @@ export default function Home() {
                 }
             /> }
 
+            <h1>{ project.name }</h1>
+
             { /* Displays the button to go back and go forward one month, and dispalys the current date */ }
             <div className={ styles['offset-container'] }>
                 <img onClick={ () => setOffset((offset) => offset - 1) } src={ ChevronLeft } alt="<" />
@@ -119,7 +140,7 @@ export default function Home() {
 
             { /* Label used to display total used in current category, and button to add new amount to that category */ }
             <div className={ styles['used-label'] }>
-                <p className={ styles['used-label-content'] }>{ (currentCategory.used + currentCategory.plannedUsed) || 0 }€</p>
+                <p className={ styles['used-label-content'] }>{ (currentCategory.used + currentCategory.plannedUsed) || 0 }{ project.unit }</p>
                 <img className={ styles['add-amount'] } onClick={ () => setCreationAmountPopUp(true) } src={ Add } alt='+' />
             </div>
 
@@ -128,6 +149,7 @@ export default function Home() {
                 total={ total }
                 gaugeUsedWidth={ gaugeUsedWidth }
                 gaugeGainWidth={ gaugeGainWidth }
+                unit={ project.unit }
             />
 
             { /* Displays current category name, with optional back and edit button */ }
@@ -143,10 +165,10 @@ export default function Home() {
             {
                 currentCategory.uuid !== 'main' && <div className={ styles['current-category-total'] }>
                     {
-                        currentCategory.gain + currentCategory.plannedGain != 0 && <p className={ styles['category-gain'] }>{ currentCategory.gain + currentCategory.plannedGain }€ Gain ({ currentCategory.plannedGain }€ (planned) + {currentCategory.gain}€)</p>
+                        currentCategory.gain + currentCategory.plannedGain != 0 && <p className={ styles['category-gain'] }>{ currentCategory.gain + currentCategory.plannedGain }{ project.unit } Gain ({ currentCategory.plannedGain }{ project.unit } (planned) + {currentCategory.gain}{ project.unit })</p>
                     }
                     {
-                        currentCategory.used + currentCategory.plannedUsed != 0 && <p className={ styles['category-used'] }>{ currentCategory.used + currentCategory.plannedUsed }€ Used ({ currentCategory.plannedUsed }€ (planned) + {currentCategory.used}€)</p>
+                        currentCategory.used + currentCategory.plannedUsed != 0 && <p className={ styles['category-used'] }>{ currentCategory.used + currentCategory.plannedUsed }{ project.unit } Used ({ currentCategory.plannedUsed }{ project.unit } (planned) + {currentCategory.used}{ project.unit })</p>
                     }
                     {
                         currentCategory.gain + currentCategory.plannedGain == 0 && currentCategory.used + currentCategory.plannedUsed == 0 && <p className={ styles['category-nothing'] }>Nothing</p>
@@ -157,6 +179,7 @@ export default function Home() {
             { /* Displays a list of all the sub categories of the current category */ }
             <CategoryList
                 categories={ categories }
+                unit={ project.unit }
                 categoryClick={ (category) => setCurrentCategoryTree((categoryTree) => [ ...categoryTree, category ]) }
                 createCategoryClick={ () => {
                     setEditedCategory(undefined);
@@ -165,7 +188,7 @@ export default function Home() {
             />
 
             { /* Link used to go to the amount list page */ }
-            <Link to={ '/list' } className={ styles['to-list'] }>
+            <Link to={ `/${projectUuid}/list` } className={ styles['to-list'] }>
                 <img src={ Sort } alt="..." />
             </Link>
         </div>

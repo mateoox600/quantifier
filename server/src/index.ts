@@ -20,14 +20,16 @@ app.use(express.json());
 
 // Used to get used amounts totals, gains amounts totals and left overs
 app.get('/total/monthly', async (req, res) => {
+    if(!req.query.project) return res.sendStatus(400);
 
+    const project = req.query.project as string;
     const offset = Number(req.query['offset']) || 0;
 
-    const gain = await Amount.getAllMonthlyGainsTotal(offset);
-    const used = await Amount.getAllMonthlyUsedTotal(offset);
+    const gain = await Amount.getAllMonthlyGainsTotal(project, offset);
+    const used = await Amount.getAllMonthlyUsedTotal(project, offset);
 
-    const plannedGain = await Amount.getAllMonthlyGainPlannedTotal(offset);
-    const plannedUsed = await Amount.getAllMonthlyUsedPlannedTotal(offset);
+    const plannedGain = await Amount.getAllMonthlyGainPlannedTotal(project, offset);
+    const plannedUsed = await Amount.getAllMonthlyUsedPlannedTotal(project, offset);
 
     res.send({
         gain, used,
@@ -37,10 +39,12 @@ app.get('/total/monthly', async (req, res) => {
 
 });
 
-import AmountRouter from './routes/Amount';
-app.use('/amount', AmountRouter);
+import ProjectRouter from './routes/Project';
+app.use('/project', ProjectRouter);
 import CategoryRouter from './routes/Category';
 app.use('/category', CategoryRouter);
+import AmountRouter from './routes/Amount';
+app.use('/amount', AmountRouter);
 
 // Starting the server with the port provided in the .env
 app.listen(process.env.PORT, async () => {

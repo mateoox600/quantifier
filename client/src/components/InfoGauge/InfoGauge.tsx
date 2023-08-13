@@ -4,20 +4,22 @@ import styles from './InfoGauge.module.scss';
 export interface InfoGaugeProps {
     total: Total,
     gaugeUsedWidth: number,
-    gaugeGainWidth: number
+    gaugeGainWidth: number,
+    unit: string
 }
 
 export default function InfoGauge({
     total, // The total object containing used, gains, and left amounts
     gaugeUsedWidth, // The width of the used amount gauge
-    gaugeGainWidth // The width of the gain amount gauge
+    gaugeGainWidth, // The width of the gain amount gauge
+    unit
 }: InfoGaugeProps) {
     return (
         <div className={ styles['gauge-container'] }>
             { /* Top description of the gauge, containing used and gains amount */ }
             <div className={ styles['gauge-description'] }>
-                <p className={ styles['used'] }>{total.plannedUsed + total.used}€ Used <span>({total.plannedUsed}€ (planned) + {total.used}€)</span></p>
-                <p className={ styles['gain'] }><span>({total.plannedGain}€ (planned) + {total.gain}€)</span> {total.plannedGain + total.gain}€ Gain</p>
+                <p className={ styles['used'] }>{total.plannedUsed + total.used}{ unit } Used <span>({total.plannedUsed}{ unit } (planned) + {total.used}{ unit })</span></p>
+                <p className={ styles['gain'] }><span>({total.plannedGain}{ unit } (planned) + {total.gain}{ unit })</span> {total.plannedGain + total.gain}{ unit } Gain</p>
             </div>
             { /*
                 The gauge is in 3 parts
@@ -36,7 +38,7 @@ export default function InfoGauge({
                 </div>
             </div>
             { /* Bottom description of the gauge, containing left amount */ }
-            <p className={ styles['gauge-left'] }>{total.left}€ Left</p>
+            <p className={ styles['gauge-left'] }>{total.left}{ unit } Left</p>
         </div>
     );
 }

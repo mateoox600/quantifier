@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { MonthMap } from '../../utils/Date';
 import { AmountWithParent } from '../../utils/Amount';
+import { Project } from '../../utils/Project';
 
 import styles from './List.module.scss';
 
@@ -9,8 +10,14 @@ import AmountPopUp from '../../components/AmountPopUp/AmountPopUp';
 
 import ChevronLeft from '../../assets/chevron_left.svg';
 import ChevronRight from '../../assets/chevron_right.svg';
+import Sort from '../../assets/sort.svg';
+import HomeIcon from '../../assets/home.svg';
 
 export default function List() {
+
+    const { uuid: projectUuid } = useParams();
+
+    const [ project, setProject ] = useState<Project>({ uuid: '', name: '', unit: '' });
 
     const [ amounts, setAmounts ] = useState<AmountWithParent[]>([]);
 
@@ -20,7 +27,14 @@ export default function List() {
     const [ date, setDate ] = useState('');
 
     useEffect(() => {
-        fetch(`/api/amount/monthly?offset=${offset}`)
+        fetch(`/api/project/${projectUuid}`)
+            .then((res) => res.json())
+            .then((project) => setProject(project))
+            .catch((err) => console.error(err));
+    }, []);
+
+    useEffect(() => {
+        fetch(`/api/amount/monthly?project=${projectUuid}&offset=${offset}`)
             .then((res) => res.json())
             .then((amounts) => setAmounts(amounts))
             .catch((err) => console.error(err));
@@ -36,9 +50,14 @@ export default function List() {
 
     return (
         <div className={ styles.list }>
+            <Link to={ '/' } className={ styles['go-home'] }>
+                <img src={ HomeIcon } alt="Home" />
+            </Link>
             { editing !== '' && <AmountPopUp
                 currentCategory={ { name: 'Main', uuid: 'main' } }
+                project={ projectUuid || '' }
                 amount={ editing }
+                offset={ offset }
                 close={ () => setEditing('') }
                 refresh={ () => setOffset((offset) => offset) }
                 back={ () => {} }
@@ -55,6 +74,7 @@ export default function List() {
                         <th>Gain or Used</th>
                         <th>Planned ?</th>
                         <th>Date</th>
+                        <th>End Date</th>
                         <th>Parent Category</th>
                         <th>Description</th>
                         <th></th>
@@ -66,6 +86,7 @@ export default function List() {
                                 <td>{ amount.gain ? 'Gain' : 'Used' }</td>
                                 <td>{ amount.planned ? 'Yes' : 'No' }</td>
                                 <td>{ new Date(amount.dateTime).toUTCString() }</td>
+                                <td>{ amount.endDateTime && amount.endDateTime != -1 ? new Date(amount.endDateTime).toUTCString() : null }</td>
                                 <td>{ amount.parent.name }</td>
                                 <td>{ amount.description }</td>
                                 <td><button onClick={ () => setEditing(amount.uuid) }>Edit...</button></td>
@@ -74,7 +95,9 @@ export default function List() {
                     }
                 </tbody>
             </table>
-            <Link to={ '/' } className={ styles['to-home'] }>...</Link>
+            <Link to={ `/${projectUuid}/` } className={ styles['to-home'] }>
+                <img src={ Sort } alt="..." />
+            </Link>
         </div>
     );
 }

@@ -7,6 +7,7 @@ export interface DataAmount {
     uuid: string,
     amount: number,
     dateTime: number,
+    endDateTime?: number,
     gain: boolean,
     planned: boolean,
     description: string
@@ -22,25 +23,33 @@ export default class Amount {
         return amount.records.length > 0 ? amount.records[0].get('amount').properties : null;
     }
 
-    // Gets every amounts of the whole database
-    public static async getAll(): Promise<DataAmount[]> {
+    // Gets every amounts of a project
+    public static async getAll(project: string): Promise<DataAmount[]> {
         const session = driver.session();
-        const amounts = await session.run('MATCH (amount:Amount) RETURN amount');
+        const amounts = await session.run(`
+            MATCH (amount:Amount)
+            MATCH (amount)-[*0..]->(project:Project)
+            WHERE project.uuid=$projectUuid
+            RETURN amount
+        `, { projectUuid: project });
         session.close();
         return amounts.records.map((record) => record.get('amount').properties);
     }
 
-    // Gets all amounts for a month with an offset
-    public static async getAllMonthly(offset: number): Promise<DataAmount[]> {
+    // Gets all amounts for a project for a month with an offset
+    public static async getAllMonthly(project: string, offset: number): Promise<DataAmount[]> {
         const { start: startDateTime, end: endDateTime } = getMonthStartAndEnd(offset);
     
         const session = driver.session();
         const amounts = await session.run(`
             MATCH (amount:Amount)
-            WHERE (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned=true AND amount.dateTime<=$endDateTime)
+            MATCH (amount)-[*0..]->(project:Project)
+            WHERE project.uuid=$projectUuid
+            AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime)
+            OR (amount.planned=true AND amount.dateTime<=$endDateTime AND (amount.endDateTime >= $endDateTime OR amount.endDateTime=-1))
             OPTIONAL MATCH (amount)-[:AmountHasCategory]->(category:Category)
             RETURN amount, category
-        `, { startDateTime, endDateTime });
+        `, { startDateTime, endDateTime, projectUuid: project });
         session.close();
 
         return amounts.records.map((record) => {
@@ -51,91 +60,121 @@ export default class Amount {
         });
     }
 
-    // Gets all gains amounts for a month with an offset
-    public static async getAllMonthlyGains(offset: number): Promise<DataAmount[]> {
+    // Gets all gains amounts for a project for a month with an offset
+    public static async getAllMonthlyGains(project: string, offset: number): Promise<DataAmount[]> {
         const { start: startDateTime, end: endDateTime } = getMonthStartAndEnd(offset);
     
         const session = driver.session();
-        const gains = await session.run('MATCH (amount:Amount) WHERE amount.gain=true AND amount.planned=false AND amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime RETURN amount', { startDateTime, endDateTime });
+        const gains = await session.run(`
+            MATCH (amount:Amount)
+            MATCH (amount)-[*0..]->(project:Project)
+            WHERE project.uuid=$projectUuid
+            AND amount.gain=true AND amount.planned=false AND amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime
+            RETURN amount
+        `, { startDateTime, endDateTime, projectUuid: project });
         session.close();
 
         return gains.records.map((record) => record.get('amount').properties);
     }
 
-    // Gets gains total for a month with an offset
-    public static async getAllMonthlyGainsTotal(offset: number) {
-        const total = (await this.getAllMonthlyGains(offset)).reduce((acc, gain) => acc + gain.amount, 0);
+    // Gets gains total for a project for a month with an offset
+    public static async getAllMonthlyGainsTotal(project: string, offset: number) {
+        const total = (await this.getAllMonthlyGains(project, offset)).reduce((acc, gain) => acc + gain.amount, 0);
         return total;
     }
 
-    // Gets all used amounts for a month with an offset
-    public static async getAllMonthlyUsed(offset: number): Promise<DataAmount[]> {
+    // Gets all used amounts for a project for a month with an offset
+    public static async getAllMonthlyUsed(project: string, offset: number): Promise<DataAmount[]> {
         const { start: startDateTime, end: endDateTime } = getMonthStartAndEnd(offset);
     
         const session = driver.session();
-        const useds = await session.run('MATCH (amount:Amount) WHERE amount.gain=false AND amount.planned=false AND amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime RETURN amount', { startDateTime, endDateTime });
+        const useds = await session.run(`
+            MATCH (amount:Amount)
+            MATCH (amount)-[*0..]->(project:Project)
+            WHERE project.uuid=$projectUuid
+            AND amount.gain=false AND amount.planned=false AND amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime
+            RETURN amount
+        `, { startDateTime, endDateTime, projectUuid: project });
         session.close();
 
         return useds.records.map((record) => record.get('amount').properties);
     }
 
-    // Gets used total for a month with an offset
-    public static async getAllMonthlyUsedTotal(offset: number) {
-        const total = (await this.getAllMonthlyUsed(offset)).reduce((acc, used) => acc + used.amount, 0);
+    // Gets used total for a project for a month with an offset
+    public static async getAllMonthlyUsedTotal(project: string, offset: number) {
+        const total = (await this.getAllMonthlyUsed(project, offset)).reduce((acc, used) => acc + used.amount, 0);
         return total;
     }
 
-    // Gets all planned gains amounts for a month with an offset
-    public static async getAllMonthlyGainPlanned(offset: number): Promise<DataAmount[]> {
+    // Gets all planned gains amounts for a project for a month with an offset
+    public static async getAllMonthlyGainPlanned(project: string, offset: number): Promise<DataAmount[]> {
         const { end: endDateTime } = getMonthStartAndEnd(offset);
         const session = driver.session();
-        const gains = await session.run('MATCH (amount:Amount) WHERE amount.gain=true AND amount.planned=true AND amount.dateTime<=$endDateTime RETURN amount', { endDateTime });
+        const gains = await session.run(`
+            MATCH (amount:Amount)
+            MATCH (amount)-[*0..]->(project:Project)
+            WHERE project.uuid=$projectUuid
+            AND amount.gain=true AND amount.planned=true AND amount.dateTime<=$endDateTime AND (amount.endDateTime >= $endDateTime OR amount.endDateTime=-1)
+            RETURN amount
+        `, { endDateTime, projectUuid: project });
         session.close();
 
         return gains.records.map((record) => record.get('amount').properties);
     }
 
-    // Gets planned gains total for a month with an offset
-    public static async getAllMonthlyGainPlannedTotal(offset: number) {
-        const total = (await this.getAllMonthlyGainPlanned(offset)).reduce((acc, gain) => acc + gain.amount, 0);
+    // Gets planned gains total for a project for a month with an offset
+    public static async getAllMonthlyGainPlannedTotal(project: string, offset: number) {
+        const total = (await this.getAllMonthlyGainPlanned(project, offset)).reduce((acc, gain) => acc + gain.amount, 0);
         return total;
     }
 
-    // Gets all planned used amounts for a month with an offset
-    public static async getAllMonthlyUsedPlanned(offset: number): Promise<DataAmount[]> {
+    // Gets all planned used amounts for a project for a month with an offset
+    public static async getAllMonthlyUsedPlanned(project: string, offset: number): Promise<DataAmount[]> {
         const { end: endDateTime } = getMonthStartAndEnd(offset);
         const session = driver.session();
-        const useds = await session.run('MATCH (amount:Amount) WHERE amount.gain=false AND amount.planned=true AND amount.dateTime<=$endDateTime RETURN amount', { endDateTime });
+        const useds = await session.run(`
+            MATCH (amount:Amount)
+            MATCH (amount)-[*0..]->(project:Project)
+            WHERE project.uuid=$projectUuid
+            AND amount.gain=false AND amount.planned=true AND amount.dateTime<=$endDateTime AND (amount.endDateTime >= $endDateTime OR amount.endDateTime=-1)
+            RETURN amount
+        `, { endDateTime, projectUuid: project });
         session.close();
 
         return useds.records.map((record) => record.get('amount').properties);
     }
 
-    // Gets planned used total for a month with an offset
-    public static async getAllMonthlyUsedPlannedTotal(offset: number) {
-        const total = (await this.getAllMonthlyUsedPlanned(offset)).reduce((acc, used) => acc + used.amount, 0);
+    // Gets planned used total for a project for a month with an offset
+    public static async getAllMonthlyUsedPlannedTotal(project: string, offset: number) {
+        const total = (await this.getAllMonthlyUsedPlanned(project, offset)).reduce((acc, used) => acc + used.amount, 0);
         return total;
     }
 
-    public static async create(amount: Omit<DataAmount, 'uuid'>, category?: string) {
+    public static async create(amount: Omit<DataAmount, 'uuid' | 'endDateTime'>, project: string, category?: string) {
         // First we define this object to add the generated uuid to the amount
-        const amountProperties = {
+        const amountProperties: DataAmount = {
             uuid: uuid(),
             ...amount
         };
 
+        if(amount.planned) amountProperties.endDateTime = -1;
+
         const session = driver.session();
 
         // We then create the amount
-        // If there are no parent category we just create it (= to creating it with main as category)
+        // If there are no parent category we create it with a relation to the project
         // Else we create the amount, with a relation to it's category
-        const query = !category ? 'CREATE (amount:Amount $amountProperties)' : `
+        const query = !category ? `
+            MATCH (project:Project)
+            WHERE project.uuid=$projectUuid
+            CREATE (amount:Amount $amountProperties)-[:AmountHasProject]->(project)
+        ` : `
             MATCH (category:Category)
             WHERE category.uuid=$category
             CREATE (amount:Amount $amountProperties)-[:AmountHasCategory]->(category)
         `;
 
-        await session.run(query, { amountProperties, category });
+        await session.run(query, { amountProperties, category, projectUuid: project });
         session.close();
 
         // We also return the properties of the just created amount

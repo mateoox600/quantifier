@@ -12,7 +12,8 @@ router.get('/:uuid/', async (req, res) => {
 
 // Get the category tree of a category via it's uuid
 router.get('/:uuid/tree', async (req, res) => {
-    const category = await Category.getCategoryTree(req.params.uuid, Number(req.query.offset) || 0);
+    if(!req.query.project) return res.sendStatus(400);
+    const category = await Category.getCategoryTree(req.params.uuid, req.query.project as string, Number(req.query.offset) || 0);
     if(!category) return res.sendStatus(404);
     res.send(category);
 });
@@ -21,15 +22,18 @@ router.get('/:uuid/tree', async (req, res) => {
 /*
 {
     name: string,
+    project: string, // Uuid of the current project
     parent: string // Optional, uuid of the parent category
 }
 */
 router.post('/', async (req, res) => {
     // Checks that the body has the right data and extracts it
     if(!('name' in req.body)) return res.sendStatus(400);
+    if(!('project' in req.body)) return res.sendStatus(400);
 
     const {
-        name
+        name,
+        project
     } = req.body;
 
     // Tries to get the parent category from the body, if it doesn't exists defaults to null
@@ -37,7 +41,7 @@ router.post('/', async (req, res) => {
 
     const category = await Category.create({
         name
-    }, parent);
+    }, project, parent);
 
     res.send(category);
 });
