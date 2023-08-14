@@ -63,7 +63,10 @@ export default function ProjectList() {
                         </Link>
                     ))
                 }
-                <div className={ styles.project } onClick={ () => setProjectPopUp(true) }>
+                <div className={ styles.project } onClick={ () => {
+                    setEditedProject(undefined);
+                    setProjectPopUp(true);
+                } }>
                     <p className={ styles['project-name'] }>Create new Project</p>
                 </div>
             </div>
