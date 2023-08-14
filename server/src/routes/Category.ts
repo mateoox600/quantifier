@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import Category from '../models/Category';
+import Project from '../models/Project';
 
 const router = Router();
 
 // Get an amount via it's uuid
 router.get('/:uuid/', async (req, res) => {
+    if(!(await Category.access(req.params.uuid, res.locals.user.uuid))) return res.sendStatus(403);
     const category = await Category.get(req.params.uuid);
     if(!category) return res.sendStatus(404);
     res.send(category);
@@ -13,6 +15,10 @@ router.get('/:uuid/', async (req, res) => {
 // Get the category tree of a category via it's uuid
 router.get('/:uuid/tree', async (req, res) => {
     if(!req.query.project) return res.sendStatus(400);
+    if(
+        !(await Category.access(req.params.uuid, res.locals.user.uuid)) &&
+        !(await Project.access(req.query.project as string, res.locals.user.uuid))
+    ) return res.sendStatus(403);
     const category = await Category.getCategoryTree(req.params.uuid, req.query.project as string, Number(req.query.offset) || 0);
     if(!category) return res.sendStatus(404);
     res.send(category);
@@ -35,6 +41,8 @@ router.post('/', async (req, res) => {
         name,
         project
     } = req.body;
+
+    if(!(await Project.access(project, res.locals.user.uuid))) return res.sendStatus(403);
 
     // Tries to get the parent category from the body, if it doesn't exists defaults to null
     const parent = ('parent' in req.body) ? req.body.parent : null;
@@ -63,6 +71,8 @@ router.post('/edit', async (req, res) => {
         name
     } = req.body;
 
+    if(!(await Category.access(uuid, res.locals.user.uuid))) return res.sendStatus(403);
+
     const category = await Category.edit({
         uuid, name
     });
@@ -72,6 +82,7 @@ router.post('/edit', async (req, res) => {
 
 // Delete a category via it's uuid
 router.delete('/:uuid', async (req, res) => {
+    if(!(await Category.access(req.params.uuid, res.locals.user.uuid))) return res.sendStatus(403);
     await Category.delete(req.params.uuid);
     res.sendStatus(200);
 });

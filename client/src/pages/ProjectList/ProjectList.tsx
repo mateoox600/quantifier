@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Project } from '../../utils/Project';
 import ProjectPopUp from '../../components/ProjectPopUp/ProjectPopUp';
 
@@ -9,6 +9,14 @@ import styles from './ProjectList.module.scss';
 import Setting from '../../assets/settings.svg';
 
 export default function ProjectList() {
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        fetch('/api/user/check').then((res) => {
+            if(res.status !== 200) navigate('/login');
+        }).catch((err) => console.error(err));
+    }, [ ]);
 
     const [ refresh, setRefresh ] = useState(true);
 

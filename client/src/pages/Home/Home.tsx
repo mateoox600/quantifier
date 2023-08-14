@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Total } from '../../utils/Amount';
 import { Category, CategoryWithAmounts } from '../../utils/Category';
 import { MonthMap } from '../../utils/Date';
@@ -20,6 +20,14 @@ import Sort from '../../assets/sort.svg';
 import HomeIcon from '../../assets/home.svg';
 
 export default function Home() {
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        fetch('/api/user/check').then((res) => {
+            if(res.status !== 200) navigate('/login');
+        }).catch((err) => console.error(err));
+    }, [ ]);
 
     const { uuid: projectUuid } = useParams();
 

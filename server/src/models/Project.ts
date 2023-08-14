@@ -10,6 +10,18 @@ export interface DataProject {
 
 export default class Project {
 
+    // Check if a user can access that project
+    public static async access(uuid: string, user: string): Promise<boolean> {
+        const session = driver.session();
+        const project = await session.run(`
+            MATCH (user:User)-[:HasParentUser]-(project:Project)
+            WHERE project.uuid=$uuid AND user.uuid=$user
+            RETURN project
+        `, { uuid, user });
+        session.close();
+        return project.records.length > 0 ? true : false;
+    }
+
     // Gets the project via it's uuid, if it's not found returns null
     public static async get(uuid: string): Promise<DataProject> {
         const session = driver.session();
@@ -19,14 +31,14 @@ export default class Project {
     }
 
     // Gets every projects of the whole database
-    public static async getAll(): Promise<DataProject[]> {
+    public static async getAll(user: string): Promise<DataProject[]> {
         const session = driver.session();
-        const projects = await session.run('MATCH (project:Project) RETURN project');
+        const projects = await session.run('MATCH (user:User)-[:HasParentUser]-(project:Project) WHERE user.uuid=$user RETURN project', { user });
         session.close();
         return projects.records.map((record) => record.get('project').properties);
     }
 
-    public static async create(project: Omit<DataProject, 'uuid'>) {
+    public static async create(project: Omit<DataProject, 'uuid'>, user: string) {
         // First we define this object to add the generated uuid to the project
         const projectProperties: DataProject = {
             uuid: uuid(),
@@ -36,9 +48,13 @@ export default class Project {
         const session = driver.session();
 
         // We then create the project
-        const query = 'CREATE (project:Project $projectProperties)';
+        const query = `
+            MATCH (user:User)
+            WHERE user.uuid=$user
+            CREATE (project:Project $projectProperties)-[:HasParentUser]->(user)
+        `;
 
-        await session.run(query, { projectProperties });
+        await session.run(query, { projectProperties, user });
         session.close();
 
         // We also return the properties of the just created project
@@ -50,7 +66,7 @@ export default class Project {
         const session = driver.session();
         await session.run('MATCH (project:Project) WHERE project.uuid=$uuid SET project+=$projectProperties RETURN project', {
             uuid: project.uuid,
-            amountProperties: project
+            projectProperties: project
         });
         session.close();
         return project;

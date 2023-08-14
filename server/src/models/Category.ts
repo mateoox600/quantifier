@@ -25,6 +25,18 @@ export interface DataCategoryTree extends DataCategoryWithAmount {
 
 export default class Category {
 
+    // Check if a user can access that category
+    public static async access(uuid: string, user: string): Promise<boolean> {
+        const session = driver.session();
+        const project = await session.run(`
+            MATCH (user:User)-[*0..]-(category:Category)
+            WHERE category.uuid=$uuid AND user.uuid=$user
+            RETURN category
+        `, { uuid, user });
+        session.close();
+        return project.records.length > 0 ? true : false;
+    }
+
     public static async get(uuid: string): Promise<DataCategory> {
         // If the uuid of the category to get is main return the default main category
         if(uuid === 'main') return { name: 'Main', uuid: 'main' };

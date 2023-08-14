@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MonthMap } from '../../utils/Date';
 import { AmountWithParent } from '../../utils/Amount';
 import { Project } from '../../utils/Project';
@@ -14,6 +14,14 @@ import Sort from '../../assets/sort.svg';
 import HomeIcon from '../../assets/home.svg';
 
 export default function List() {
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        fetch('/api/user/check').then((res) => {
+            if(res.status !== 200) navigate('/login');
+        }).catch((err) => console.error(err));
+    }, [ ]);
 
     const { uuid: projectUuid } = useParams();
 
@@ -82,7 +90,7 @@ export default function List() {
                     {
                         amounts.map((amount) => (
                             <tr key={ amount.uuid }>
-                                <td>{ amount.amount }€</td>
+                                <td>{ amount.amount }{ project.unit }</td>
                                 <td>{ amount.gain ? 'Gain' : 'Used' }</td>
                                 <td>{ amount.planned ? 'Yes' : 'No' }</td>
                                 <td>{ new Date(amount.dateTime).toUTCString() }</td>

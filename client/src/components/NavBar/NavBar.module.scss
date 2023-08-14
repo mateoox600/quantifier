@@ -1,0 +1,19 @@
+
+.nav {
+    width: 100vw;
+    height: 5vh;
+    padding-right: 1.5em;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2em;
+    background-color: #262a34;
+}
+
+.nav-element {
+    height: 50%;
+    background-color: #262a34;
+    font-size: 1em;
+    cursor: pointer;
+}

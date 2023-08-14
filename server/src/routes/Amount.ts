@@ -1,22 +1,26 @@
 import { Router } from 'express';
 import Amount from '../models/Amount';
+import Project from '../models/Project';
 
 const router = Router();
 
 // Get all amounts of a project
 router.get('/', async (req, res) => {
     if(!req.query.project) return res.sendStatus(400);
+    if(!(await Project.access(req.query.project as string, res.locals.user.uuid))) return res.sendStatus(403);
     res.send(await Amount.getAll(req.query.project as string));
 });
 
 // Get all monthly amounts of a project
 router.get('/monthly', async (req, res) => {
     if(!req.query.project) return res.sendStatus(400);
+    if(!(await Project.access(req.query.project as string, res.locals.user.uuid))) return res.sendStatus(403);
     res.send(await Amount.getAllMonthly(req.query.project as string, Number(req.query.offset) || 0));
 });
 
 // Get an amount via it's uuid
 router.get('/:uuid/', async (req, res) => {
+    if(!(await Amount.access(req.params.uuid, res.locals.user.uuid))) return res.sendStatus(403);
     const amount = await Amount.get(req.params.uuid);
     if(!amount) return res.sendStatus(404);
     res.send(amount);
@@ -51,6 +55,8 @@ router.post('/', async (req, res) => {
         description,
         project
     } = req.body;
+
+    if(!(await Project.access(project, res.locals.user.uuid))) return res.sendStatus(403);
 
     // Tries to get the parent category from the body, if it doesn't exists defaults to null
     const category = ('category' in req.body) ? req.body.category : null;
@@ -99,6 +105,8 @@ router.post('/edit', async (req, res) => {
         planned,
         description
     } = req.body;
+    
+    if(!(await Amount.access(uuid, res.locals.user.uuid))) return res.sendStatus(403);
 
     // Tries to get the end date time from the body, if it doesn't exists defaults to null
     const endDateTime = ('endDateTime' in req.body) ? req.body.endDateTime : null;
@@ -121,6 +129,7 @@ router.post('/edit', async (req, res) => {
 
 // Delete an amount via it's uuid
 router.delete('/:uuid/', async (req, res) => {
+    if(!(await Amount.access(req.params.uuid, res.locals.user.uuid))) return res.sendStatus(403);
     await Amount.delete(req.params.uuid);
 
     res.sendStatus(200);

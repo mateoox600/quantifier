@@ -5,11 +5,12 @@ const router = Router();
 
 // Get all projects
 router.get('/', async (req, res) => {
-    res.send(await Project.getAll());
+    res.send(await Project.getAll(res.locals.user.uuid));
 });
 
 // Get a project via it's uuid
 router.get('/:uuid/', async (req, res) => {
+    if(!(await Project.access(req.params.uuid, res.locals.user.uuid))) return res.sendStatus(403);
     const project = await Project.get(req.params.uuid);
     if(!project) return res.sendStatus(404);
     res.send(project);
@@ -34,7 +35,7 @@ router.post('/', async (req, res) => {
 
     const projectObject = await Project.create({
         name, unit
-    });
+    }, res.locals.user.uuid);
 
     res.send(projectObject);
 });
@@ -59,6 +60,8 @@ router.post('/edit', async (req, res) => {
         unit
     } = req.body;
 
+    if(!(await Project.access(uuid, res.locals.user.uuid))) return res.sendStatus(403);
+
     const projectObject = await Project.edit({
         uuid, name, unit
     });
@@ -68,6 +71,7 @@ router.post('/edit', async (req, res) => {
 
 // Delete a project via it's uuid
 router.delete('/:uuid/', async (req, res) => {
+    if(!(await Project.access(req.params.uuid, res.locals.user.uuid))) return res.sendStatus(403);
     await Project.delete(req.params.uuid);
 
     res.sendStatus(200);

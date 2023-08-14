@@ -15,6 +15,18 @@ export interface DataAmount {
 
 export default class Amount {
 
+    // Check if a user can access that amount
+    public static async access(uuid: string, user: string): Promise<boolean> {
+        const session = driver.session();
+        const project = await session.run(`
+            MATCH (user:User)-[*0..]-(amount:Amount)
+            WHERE amount.uuid=$uuid AND user.uuid=$user
+            RETURN amount
+        `, { uuid, user });
+        session.close();
+        return project.records.length > 0 ? true : false;
+    }
+
     // Gets the amount via it's uuid, if it's not found returns null
     public static async get(uuid: string): Promise<DataAmount> {
         const session = driver.session();
