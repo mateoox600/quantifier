@@ -50,7 +50,7 @@ app.use(async (req, res, next) => {
 });
 
 // Used to get used amounts totals, gains amounts totals and left overs
-app.get('/total/monthly', async (req, res) => {
+app.get('/total/monthly', protectedEndpoint, async (req, res) => {
     if(!req.query.project) return res.sendStatus(400);
 
     const project = req.query.project as string;
