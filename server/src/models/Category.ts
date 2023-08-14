@@ -49,7 +49,7 @@ export default class Category {
         return category.records.length > 0 ? category.records[0].get('category').properties : null;
     }
 
-    public static async getWithAmount(uuid: string, offset: number): Promise<DataCategoryWithAmount> {
+    public static async getWithAmount(uuid: string, project: string, offset: number): Promise<DataCategoryWithAmount> {
         // Gets the start time and end time of the month, with the current offset
         const { start: startDateTime, end: endDateTime } = getMonthStartAndEnd(offset);
 
@@ -58,11 +58,23 @@ export default class Category {
 
         // Then it gets every amounts from this category and it's sub categories
         const session = driver.session();
-        const amountsQuery = await session.run(`
-                MATCH (category:Category)<-[*1..]-(amount:Amount)
-                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned=true AND amount.dateTime<=$endDateTime)
+        const amountsQuery = await session.run(category.uuid === 'main' ? `
+                MATCH (project:Project)<-[*1..]-(amount:Amount)
+                WHERE project.uuid=$projectUuid
+                AND (
+                    (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR
+                    (amount.planned=true AND amount.dateTime<=$endDateTime AND (amount.endDateTime >= $endDateTime OR amount.endDateTime=-1))
+                )
                 RETURN amount
-            `, { uuid: category.uuid, startDateTime, endDateTime });
+        ` : `
+                MATCH (category:Category)<-[*1..]-(amount:Amount)
+                WHERE category.uuid=$uuid
+                AND (
+                    (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR
+                    (amount.planned=true AND amount.dateTime<=$endDateTime AND (amount.endDateTime >= $endDateTime OR amount.endDateTime=-1))
+                )
+                RETURN amount
+            `, { uuid: category.uuid, projectUuid: project, startDateTime, endDateTime });
         session.close();
 
         // Filters and reduce them for used, planned used, gains and planned gains
@@ -105,7 +117,7 @@ export default class Category {
         // If no category is returned, then there are no sub categories, so we just return the current category and it's amounts
         if(result.records.length == 0) {
             session.close();
-            return { subCategories: [], ...await this.getWithAmount(uuid, offset) };
+            return { subCategories: [], ...await this.getWithAmount(uuid, project, offset) };
         }
 
         // Else we get the start and end of the month with the offset, then we build the main category object
@@ -118,7 +130,7 @@ export default class Category {
         };
 
         // Then we get the amounts for the current category
-        const mainAmounts = await this.getWithAmount(mainCategory.uuid, offset);
+        const mainAmounts = await this.getWithAmount(mainCategory.uuid, project, offset);
 
         // This list with contain every sub categories and it's amounts
         const subCategories: DataCategoryWithAmount[] = [];

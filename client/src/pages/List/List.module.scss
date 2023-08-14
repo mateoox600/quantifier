@@ -12,6 +12,10 @@
     align-items: center;
     gap: 1em;
     margin: 1em;
+
+    a {
+        cursor: pointer;
+    }
 }
 
 .offset-date {

@@ -11,6 +11,10 @@
     align-items: center;
     gap: 1em;
     margin: 1em;
+
+    a {
+        cursor: pointer;
+    }
 }
 
 .offset-date {
@@ -36,6 +40,7 @@
     width: 2em;
     font-size: 1em;
     border-radius: 50%;
+    cursor: pointer;
 }
 
 .current-category {
@@ -46,12 +51,14 @@
         background-color: transparent;
         font-size: 1em;
         padding-right: 0.5em;
+        cursor: pointer;
     }
 
     .category-delete {
         background-color: transparent;
         font-size: 1em;
         padding-left: 0.5em;
+        cursor: pointer;
     }
 }
 

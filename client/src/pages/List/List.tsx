@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MonthMap } from '../../utils/Date';
 import { AmountWithParent } from '../../utils/Amount';
 import { Project } from '../../utils/Project';
@@ -22,6 +22,23 @@ export default function List() {
         }).catch((err) => console.error(err));
     }, [ ]);
 
+    const location = useLocation();
+    const [ searchParams ] = useSearchParams();
+
+    const [ offset, setOffset ] = useState(Number(searchParams.get('offset')) || 0);
+
+    useEffect(() => {
+        setOffset(Number(searchParams.get('offset')) || 0);
+    }, [ location ]);
+
+    const navigateHome = (newOffset: number) => {
+        navigate(`./?offset=${newOffset}`);
+    };
+
+    const moveOffset = (n: number) => {
+        navigateHome(offset + n);
+    };
+
     const { uuid: projectUuid } = useParams();
 
     const [ project, setProject ] = useState<Project>({ uuid: '', name: '', unit: '' });
@@ -30,7 +47,6 @@ export default function List() {
 
     const [ editing, setEditing ] = useState('');
 
-    const [ offset, setOffset ] = useState(0);
     const [ date, setDate ] = useState('');
 
     useEffect(() => {
@@ -63,13 +79,17 @@ export default function List() {
                 amount={ editing }
                 offset={ offset }
                 close={ () => setEditing('') }
-                refresh={ () => setOffset((offset) => offset) }
+                refresh={ () => navigateHome(offset) }
                 back={ () => {} }
             /> }
             <div className={ styles['offset-container'] }>
-                <img onClick={ () => setOffset((offset) => offset - 1) } src={ ChevronLeft } alt='<' />
-                <p className={ styles['offset-date'] }>{ date }</p>
-                <img onClick={ () => setOffset((offset) => offset + 1) } src={ ChevronRight } alt='>' />
+                <a onClick={ () => moveOffset(-1) }>
+                    <img src={ ChevronLeft } alt="<" />
+                </a>
+                <a onClick={ () => moveOffset(-offset) } className={ styles['offset-date'] }>{ date }</a>
+                <a onClick={ () => moveOffset(1) }>
+                    <img src={ ChevronRight } alt=">" />
+                </a>
             </div>
             <table className={ styles.table }>
                 <tbody>
@@ -99,7 +119,7 @@ export default function List() {
                     }
                 </tbody>
             </table>
-            <Link to={ `/${projectUuid}/` } className={ styles['to-home'] }>
+            <Link to={ `/${projectUuid}/?offset=${offset}` } className={ styles['to-home'] }>
                 <img src={ Sort } alt="..." />
             </Link>
         </div>

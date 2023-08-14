@@ -31,7 +31,7 @@ export default function Home() {
     const location = useLocation();
     const [ searchParams ] = useSearchParams();
 
-    const [ offset, setOffset ] = useState(0);
+    const [ offset, setOffset ] = useState(Number(searchParams.get('offset')) || 0);
     const [ currentCategoryTree, setCurrentCategoryTree ] = useState<Category[]>([]);
 
     useEffect(() => {
@@ -146,6 +146,10 @@ export default function Home() {
                 offset={ offset }
                 close={ () => setCreationAmountPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
+                    fetch(`/api/total/monthly?project=${projectUuid}&offset=${offset}`)
+                        .then((res) => res.json())
+                        .then((total) => setTotal(total))
+                        .catch((err) => console.error(err))
                     navigateHome(offset, currentCategoryTree);
                 } }
                 back={ // Goes back one category in the category tree
@@ -171,15 +175,21 @@ export default function Home() {
 
             { /* Displays the button to go back and go forward one month, and dispalys the current date */ }
             <div className={ styles['offset-container'] }>
-                <img onClick={ () => moveOffset(-1) } src={ ChevronLeft } alt="<" />
-                <p className={ styles['offset-date'] }>{ date }</p>
-                <img onClick={ () => moveOffset(1) } src={ ChevronRight } alt=">" />
+                <a onClick={ () => moveOffset(-1) }>
+                    <img src={ ChevronLeft } alt="<" />
+                </a>
+                <a onClick={ () => moveOffset(-offset) } className={ styles['offset-date'] }>{ date }</a>
+                <a onClick={ () => moveOffset(1) }>
+                    <img src={ ChevronRight } alt=">" />
+                </a>
             </div>
 
             { /* Label used to display total used in current category, and button to add new amount to that category */ }
             <div className={ styles['used-label'] }>
                 <p className={ styles['used-label-content'] }>{ (currentCategory.used + currentCategory.plannedUsed) || 0 }{ project.unit }</p>
-                <img className={ styles['add-amount'] } onClick={ () => setCreationAmountPopUp(true) } src={ Add } alt='+' />
+                <a onClick={ () => setCreationAmountPopUp(true) }>
+                    <img className={ styles['add-amount'] }  src={ Add } alt='+' />
+                </a>
             </div>
 
             { /* Styled info gauge to display used, and gain taking into account planned amounts */ }
@@ -226,7 +236,7 @@ export default function Home() {
             />
 
             { /* Link used to go to the amount list page */ }
-            <Link to={ `/${projectUuid}/list` } className={ styles['to-list'] }>
+            <Link to={ `/${projectUuid}/list?offset=${offset}` } className={ styles['to-list'] }>
                 <img src={ Sort } alt="..." />
             </Link>
         </div>
