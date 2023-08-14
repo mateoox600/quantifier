@@ -17,7 +17,6 @@ import ChevronRight from '../../assets/chevron_right.svg';
 import Add from '../../assets/add.svg';
 import Setting from '../../assets/settings.svg';
 import Sort from '../../assets/sort.svg';
-import HomeIcon from '../../assets/home.svg';
 
 export default function Home() {
 
@@ -59,7 +58,7 @@ export default function Home() {
             .catch((err) => console.error(err));
     }, []);
 
-    // Fetches the total, when refresh is true
+    // Fetches the total, when the offset changes
     useEffect(() => {
         fetch(`/api/total/monthly?project=${projectUuid}&offset=${offset}`)
             .then((res) => res.json())
@@ -83,6 +82,9 @@ export default function Home() {
         date.setUTCHours(0, 0, 0, 0);
         date.setUTCMonth(date.getUTCMonth() + (offset ?? 0));
         setDate(`${MonthMap[date.getUTCMonth()]} ${date.getUTCFullYear()}`);
+
+        if(offset != 0) navigate(`./?offset=${offset}`);
+        else navigate('./');
     }, [ offset ]);
 
     // When the category tree changes, refetch the new category, and it's childs
@@ -104,9 +106,6 @@ export default function Home() {
 
     return (
         <div className={ styles.home }>
-            <Link to={ '/' } className={ styles['go-home'] }>
-                <img src={ HomeIcon } alt="Home" />
-            </Link>
             { /* Popup to create amounts */ }
             { creationAmountPopUp && <AmountPopUp
                 currentCategory={ currentCategoryTree[currentCategoryTree.length - 1] } // Current category
@@ -114,7 +113,10 @@ export default function Home() {
                 offset={ offset }
                 close={ () => setCreationAmountPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
-                    setOffset((offset) => offset);
+                    fetch(`/api/total/monthly?project=${projectUuid}&offset=${offset}`)
+                        .then((res) => res.json())
+                        .then((total) => setTotal(total))
+                        .catch((err) => console.error(err))
                     setCurrentCategoryTree((c) => [ ...c ]);
                 } }
                 back={ // Goes back one category in the category tree
@@ -129,7 +131,10 @@ export default function Home() {
                 category={ editedCategory } // Uuid of the currently edited category
                 close={ () => setCreationCategoryPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
-                    setOffset((offset) => offset);
+                    fetch(`/api/total/monthly?project=${projectUuid}&offset=${offset}`)
+                        .then((res) => res.json())
+                        .then((total) => setTotal(total))
+                        .catch((err) => console.error(err))
                     setCurrentCategoryTree((c) => [ ...c ]);
                 } }
                 back={ // Goes back one category in the category tree

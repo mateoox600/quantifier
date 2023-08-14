@@ -1,4 +1,4 @@
-import { MouseEvent, createRef, useEffect, useState } from 'react';
+import { FormEvent, createRef, useEffect, useState } from 'react';
 import styles from './ProjectPopUp.module.scss';
 import { Project } from '../../utils/Project';
 
@@ -29,7 +29,7 @@ export default function ProjectPopUp({
     const projectFormRef = createRef<HTMLFormElement>();
 
     // When the component is in editing mode this function is called when the form is submited
-    const editProject = (e: MouseEvent) => {
+    const editProject = (e: FormEvent) => {
         e.preventDefault();
         if(!projectFormRef.current) return;
         // It gets the form data, and extracts the needed values from it
@@ -57,7 +57,7 @@ export default function ProjectPopUp({
     };
 
     // When the component is in creating mode this function is called when the form is submited
-    const createProject = (e: MouseEvent) => {
+    const createProject = (e: FormEvent) => {
         e.preventDefault();
         if(!projectFormRef.current) return;
         // It gets the form data, extracts the needed values from it and adds the parent category if one is present
@@ -103,7 +103,7 @@ export default function ProjectPopUp({
             if((e.target as HTMLElement).id !== 'popup-back') return;
             close();
         } }>
-            <form className={ styles['form'] } ref={ projectFormRef }>
+            <form className={ styles['form'] } ref={ projectFormRef } onSubmit={ project ? editProject : createProject }>
                 <p>{ project ? 'Edit' : 'Create new' } Project</p>
                 <div>
                     <div> { /* The name of the new project, or the new name of the edited project */ }
@@ -119,7 +119,7 @@ export default function ProjectPopUp({
                     // If in editing mode, show the Delete button
                     project && <button onClick={ deleteCurrentProject }>Delete</button>
                 }
-                <button type="submit" onClick={ project ? editProject : createProject }>{ project ? 'Apply' : 'Create' }</button>
+                <button type="submit">{ project ? 'Apply' : 'Create' }</button>
             </form>
         </div>
     )

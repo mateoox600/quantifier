@@ -1,4 +1,4 @@
-import { MouseEvent, createRef, useEffect, useState } from 'react';
+import { FormEvent, createRef, useEffect, useState } from 'react';
 import styles from './CategoryPopUp.module.scss';
 import { Category } from '../../utils/Category';
 
@@ -35,7 +35,7 @@ export default function CategoryPopUp({
     const categoryFormRef = createRef<HTMLFormElement>();
 
     // When the component is in editing mode this function is called when the form is submited
-    const editCategory = (e: MouseEvent) => {
+    const editCategory = (e: FormEvent) => {
         e.preventDefault();
         if(!categoryFormRef.current) return;
         // It gets the form data, and extracts the needed values from it
@@ -62,7 +62,7 @@ export default function CategoryPopUp({
     };
 
     // When the component is in creating mode this function is called when the form is submited
-    const createCategory = (e: MouseEvent) => {
+    const createCategory = (e: FormEvent) => {
         e.preventDefault();
         if(!categoryFormRef.current) return;
         // It gets the form data, extracts the needed values from it and adds the parent category if one is present
@@ -111,7 +111,7 @@ export default function CategoryPopUp({
             if((e.target as HTMLElement).id !== 'popup-back') return;
             close();
         } }>
-            <form className={ styles['form'] } ref={ categoryFormRef }>
+            <form className={ styles['form'] } ref={ categoryFormRef } onSubmit={ category ? editCategory : createCategory }>
                 <p>{ category ? 'Edit' : 'Create new' } Category</p>
                 <div>
                     <div> { /* The name of the new category, or the new name of the edited category */ }
@@ -123,7 +123,7 @@ export default function CategoryPopUp({
                     // If in editing mode, show the Delete button
                     category && <button onClick={ deleteCurrentCategory }>Delete</button>
                 }
-                <button type="submit" onClick={ category ? editCategory : createCategory }>{ category ? 'Apply' : 'Create' }</button>
+                <button type="submit">{ category ? 'Apply' : 'Create' }</button>
             </form>
         </div>
     )

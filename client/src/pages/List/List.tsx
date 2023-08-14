@@ -11,7 +11,6 @@ import AmountPopUp from '../../components/AmountPopUp/AmountPopUp';
 import ChevronLeft from '../../assets/chevron_left.svg';
 import ChevronRight from '../../assets/chevron_right.svg';
 import Sort from '../../assets/sort.svg';
-import HomeIcon from '../../assets/home.svg';
 
 export default function List() {
 
@@ -58,9 +57,6 @@ export default function List() {
 
     return (
         <div className={ styles.list }>
-            <Link to={ '/' } className={ styles['go-home'] }>
-                <img src={ HomeIcon } alt="Home" />
-            </Link>
             { editing !== '' && <AmountPopUp
                 currentCategory={ { name: 'Main', uuid: 'main' } }
                 project={ projectUuid || '' }

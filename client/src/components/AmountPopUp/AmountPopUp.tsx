@@ -1,4 +1,4 @@
-import { MouseEvent, createRef, useEffect, useState } from 'react';
+import { FormEvent, createRef, useEffect, useState } from 'react';
 import styles from './AmountPopUp.module.scss';
 import { Category } from '../../utils/Category';
 import { Amount } from '../../utils/Amount';
@@ -43,7 +43,7 @@ export default function AmountPopUp({
     const amountFormRef = createRef<HTMLFormElement>();
 
     // When the component is in editing mode this function is called when the form is submited
-    const editAmount = (e: MouseEvent) => {
+    const editAmount = (e: FormEvent) => {
         e.preventDefault();
 
         const formData = {
@@ -67,7 +67,7 @@ export default function AmountPopUp({
     };
 
     // When the component is in creating mode this function is called when the form is submited
-    const createAmount = (e: MouseEvent) => {
+    const createAmount = (e: FormEvent) => {
         e.preventDefault();
         if(!amountFormRef.current) return;
         // It gets the form data, extracts the needed values from it and adds the parent category if one is present
@@ -118,7 +118,7 @@ export default function AmountPopUp({
             if((e.target as HTMLElement).id !== 'popup-back') return;
             close();
         } }>
-            <form className={ styles['creation-form'] } ref={ amountFormRef }>
+            <form className={ styles['creation-form'] } ref={ amountFormRef } onSubmit={ amount ? editAmount : createAmount }>
                 <p>{ amount ? 'Edit' : 'Create new' } Amount</p>
                 <div>
                     <div>
@@ -154,7 +154,7 @@ export default function AmountPopUp({
                     // If in editing mode, show the Delete button
                     amount && <button onClick={ deleteCurrentAmount }>Delete</button>
                 }
-                <button type="submit" onClick={ amount ? editAmount : createAmount }>{ amount ? 'Apply' : 'Add' }</button>
+                <button type="submit">{ amount ? 'Apply' : 'Add' }</button>
             </form>
         </div>
     );

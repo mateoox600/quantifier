@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { User } from '../../utils/User';
 
 import styles from './NavBar.module.scss';
+
+import HomeIcon from '../../assets/home.svg';
 
 export default function NavBar() {
 
@@ -10,12 +11,13 @@ export default function NavBar() {
 
     const location = useLocation();
 
-    const [ user, setUser ] = useState<User | null>(null);
+    const [ connected, setConnected ] = useState(false);
 
     useEffect(() => {
-        fetch('/api/user/').then((res) => res.json())
-            .then((user) => setUser(user))
-            .catch((err) => console.error(err));
+        fetch('/api/user/check').then((res) => {
+            if(res.status !== 200) return setConnected(false);
+            return setConnected(true);
+        }).catch((err) => console.error(err));
     }, [ location ]);
 
     const disconnect = () => {
@@ -26,13 +28,21 @@ export default function NavBar() {
 
     return (
         <nav className={ styles.nav }>
+            { /* Because of flex-direction we need to put the last element at the start */ }
             {
-                user ? (
-                    <button className={ styles['nav-element'] } onClick={ disconnect }>Disconnect</button>
+                connected ? (
+                    <>
+                        <button className={ styles['nav-element'] } onClick={ disconnect }>Disconnect</button>
+                        <Link to={ '/' } className={ styles['nav-element'] }>
+                            <img src={ HomeIcon } alt="Home" />
+                        </Link>
+                    </>
                 ) : (
                     <>
-                        <Link to={ '/login' } className={ styles['nav-element'] }>Login</Link>
-                        <Link to={ '/register' } className={ styles['nav-element'] }>Register</Link>
+                        <div>
+                            <Link to={ '/register' } className={ styles['nav-element'] }>Register</Link>
+                            <Link to={ '/login' } className={ styles['nav-element'] }>Login</Link>
+                        </div>
                     </>
                 )
             }
