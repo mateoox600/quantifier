@@ -20,15 +20,51 @@ import Sort from '../../assets/sort.svg';
 
 export default function Home() {
 
-    const location = useLocation();
     const navigate = useNavigate();
-    const [ searchParams ] = useSearchParams();
 
     useEffect(() => {
         fetch('/api/user/check').then((res) => {
             if(res.status !== 200) navigate('/login');
         }).catch((err) => console.error(err));
     }, [ ]);
+
+    const location = useLocation();
+    const [ searchParams ] = useSearchParams();
+
+    const [ offset, setOffset ] = useState(0);
+    const [ currentCategoryTree, setCurrentCategoryTree ] = useState<Category[]>([]);
+
+    useEffect(() => {
+        setOffset(Number(searchParams.get('offset')) || 0);
+        const categoryParam = searchParams.get('categories');
+        if(!categoryParam) return setCurrentCategoryTree([]);
+        setCurrentCategoryTree(
+            categoryParam.split(';').map((categoryStr) => {
+                const splitted = categoryStr.split(',');
+                return {
+                    name: splitted[0],
+                    uuid: splitted[1]
+                }
+            })
+        );
+    }, [ location ]);
+
+    const navigateHome = (newOffset: number, newCurrentCategoryTree: Category[]) => {
+        navigate(`./?offset=${newOffset}&categories=${
+            newCurrentCategoryTree.map((c) => `${c.name},${c.uuid}`).join(';')
+        }`);
+    };
+
+    const moveOffset = (n: number) => {
+        navigateHome(offset + n, currentCategoryTree);
+    };
+
+    const moveCategory = (category?: Category) => {
+        let newCurrentCategoryTree = [ ...currentCategoryTree ];
+        if(category) newCurrentCategoryTree.push(category);
+        else newCurrentCategoryTree = newCurrentCategoryTree.slice(0, newCurrentCategoryTree.length - 1);
+        navigateHome(offset, newCurrentCategoryTree);
+    };
 
     const { uuid: projectUuid } = useParams();
 
@@ -39,25 +75,17 @@ export default function Home() {
     const [ creationCategoryPopUp, setCreationCategoryPopUp ] = useState(false);
     const [ editedCategory, setEditedCategory ] = useState<string | undefined>();
 
-    // The month offset and the current text date
-    const [ offset, setOffset ] = useState(0);
+    // The current text date
     const [ date, setDate ] = useState('');
-
-    useEffect(() => {
-        const newOffset = Number(searchParams.get('offset')) || 0;
-        if(offset === newOffset || ( offset == 0 && newOffset != 0 )) return;
-        setOffset(newOffset);
-    }, [ location ]);
 
     // Stores the total amounts and the widths required by the info gauge
     const [ total, setTotal ] = useState<Total>({ gain: 0, used: 0, plannedGain: 0, plannedUsed: 0, left: 0 });
     const [ gaugeUsedWidth, setGaugeUsedWidth ] = useState(0);
     const [ gaugeGainWidth, setGaugeGainWidth ] = useState(0);
 
-    // Stores the current category with it's total amounts, stores every child categories, and the category tree
+    // Stores the current category with it's total amounts and stores every child categories
     const [ currentCategory, setCurrentCategory ] = useState<CategoryWithAmounts>({ name: 'Main', uuid: 'main', gain: 0, used: 0, plannedGain: 0, plannedUsed: 0, left: 0 });
     const [ categories, setCategories ] = useState<CategoryWithAmounts[]>([]);
-    const [ currentCategoryTree, setCurrentCategoryTree ] = useState<Category[]>([]);
 
     useEffect(() => {
         fetch(`/api/project/${projectUuid}`)
@@ -90,10 +118,6 @@ export default function Home() {
         date.setUTCHours(0, 0, 0, 0);
         date.setUTCMonth(date.getUTCMonth() + (offset ?? 0));
         setDate(`${MonthMap[date.getUTCMonth()]} ${date.getUTCFullYear()}`);
-
-        const newOffset = Number(searchParams.get('offset')) || 0;
-        if(offset === newOffset) return;
-        navigate(`./?offset=${offset}`);
     }, [ offset ]);
 
     // When the category tree changes, refetch the new category, and it's childs
@@ -122,14 +146,10 @@ export default function Home() {
                 offset={ offset }
                 close={ () => setCreationAmountPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
-                    fetch(`/api/total/monthly?project=${projectUuid}&offset=${offset}`)
-                        .then((res) => res.json())
-                        .then((total) => setTotal(total))
-                        .catch((err) => console.error(err))
-                    setCurrentCategoryTree((c) => [ ...c ]);
+                    navigate(0)
                 } }
                 back={ // Goes back one category in the category tree
-                    () => setCurrentCategoryTree((categoryTree) => categoryTree.slice(0, categoryTree.length - 1))
+                    moveCategory
                 }
             /> }
 
@@ -140,14 +160,10 @@ export default function Home() {
                 category={ editedCategory } // Uuid of the currently edited category
                 close={ () => setCreationCategoryPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
-                    fetch(`/api/total/monthly?project=${projectUuid}&offset=${offset}`)
-                        .then((res) => res.json())
-                        .then((total) => setTotal(total))
-                        .catch((err) => console.error(err))
-                    setCurrentCategoryTree((c) => [ ...c ]);
+                    navigate(0)
                 } }
                 back={ // Goes back one category in the category tree
-                    () => setCurrentCategoryTree((categoryTree) => categoryTree.slice(0, categoryTree.length - 1))
+                    moveCategory
                 }
             /> }
 
@@ -155,9 +171,9 @@ export default function Home() {
 
             { /* Displays the button to go back and go forward one month, and dispalys the current date */ }
             <div className={ styles['offset-container'] }>
-                <img onClick={ () => setOffset((offset) => offset - 1) } src={ ChevronLeft } alt="<" />
+                <img onClick={ () => moveOffset(-1) } src={ ChevronLeft } alt="<" />
                 <p className={ styles['offset-date'] }>{ date }</p>
-                <img onClick={ () => setOffset((offset) => offset + 1) } src={ ChevronRight } alt=">" />
+                <img onClick={ () => moveOffset(1) } src={ ChevronRight } alt=">" />
             </div>
 
             { /* Label used to display total used in current category, and button to add new amount to that category */ }
@@ -176,7 +192,7 @@ export default function Home() {
 
             { /* Displays current category name, with optional back and edit button */ }
             <p className={ styles['current-category'] }>
-                { currentCategory.uuid !== 'main' && <img className={ styles['category-back'] } onClick={ () => setCurrentCategoryTree((categoryTree) => categoryTree.slice(0, categoryTree.length - 1)) } src={ ChevronLeft } alt='<' /> }
+                { currentCategory.uuid !== 'main' && <img className={ styles['category-back'] } onClick={ () => moveCategory() } src={ ChevronLeft } alt='<' /> }
                 {
                     currentCategoryTree.slice(0, -1).map((category) => category.name).join(' / ')
                 } / { currentCategory.uuid !== 'main' ? currentCategory.name : '' }
@@ -202,7 +218,7 @@ export default function Home() {
             <CategoryList
                 categories={ categories }
                 unit={ project.unit }
-                categoryClick={ (category) => setCurrentCategoryTree((categoryTree) => [ ...categoryTree, category ]) }
+                categoryClick={ (category) => moveCategory(category) }
                 createCategoryClick={ () => {
                     setEditedCategory(undefined);
                     setCreationCategoryPopUp(true)
