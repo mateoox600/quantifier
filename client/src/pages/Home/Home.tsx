@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Total } from '../../utils/Amount';
 import { Category, CategoryWithAmounts } from '../../utils/Category';
 import { MonthMap } from '../../utils/Date';
@@ -20,7 +20,9 @@ import Sort from '../../assets/sort.svg';
 
 export default function Home() {
 
+    const location = useLocation();
     const navigate = useNavigate();
+    const [ searchParams ] = useSearchParams();
 
     useEffect(() => {
         fetch('/api/user/check').then((res) => {
@@ -40,6 +42,12 @@ export default function Home() {
     // The month offset and the current text date
     const [ offset, setOffset ] = useState(0);
     const [ date, setDate ] = useState('');
+
+    useEffect(() => {
+        const newOffset = Number(searchParams.get('offset')) || 0;
+        if(offset === newOffset || ( offset == 0 && newOffset != 0 )) return;
+        setOffset(newOffset);
+    }, [ location ]);
 
     // Stores the total amounts and the widths required by the info gauge
     const [ total, setTotal ] = useState<Total>({ gain: 0, used: 0, plannedGain: 0, plannedUsed: 0, left: 0 });
@@ -83,8 +91,9 @@ export default function Home() {
         date.setUTCMonth(date.getUTCMonth() + (offset ?? 0));
         setDate(`${MonthMap[date.getUTCMonth()]} ${date.getUTCFullYear()}`);
 
-        if(offset != 0) navigate(`./?offset=${offset}`);
-        else navigate('./');
+        const newOffset = Number(searchParams.get('offset')) || 0;
+        if(offset === newOffset) return;
+        navigate(`./?offset=${offset}`);
     }, [ offset ]);
 
     // When the category tree changes, refetch the new category, and it's childs
