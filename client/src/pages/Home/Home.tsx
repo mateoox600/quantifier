@@ -146,7 +146,7 @@ export default function Home() {
                 offset={ offset }
                 close={ () => setCreationAmountPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
-                    navigate(0)
+                    navigateHome(offset, currentCategoryTree);
                 } }
                 back={ // Goes back one category in the category tree
                     moveCategory
@@ -160,7 +160,7 @@ export default function Home() {
                 category={ editedCategory } // Uuid of the currently edited category
                 close={ () => setCreationCategoryPopUp(false) }
                 refresh={ () => { // Refresh the total and the current category
-                    navigate(0)
+                    navigateHome(offset, currentCategoryTree);
                 } }
                 back={ // Goes back one category in the category tree
                     moveCategory

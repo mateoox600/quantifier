@@ -1,4 +1,4 @@
-import { FormEvent, createRef, useEffect, useState } from 'react';
+import { FormEvent, MouseEvent, createRef, useEffect, useState } from 'react';
 import styles from './CategoryPopUp.module.scss';
 import { Category } from '../../utils/Category';
 
@@ -90,17 +90,18 @@ export default function CategoryPopUp({
     };
 
     // Function used to delete the currently edited category
-    const deleteCurrentCategory = () => {
+    const deleteCurrentCategory = (e: MouseEvent) => {
+        e.preventDefault();
         // Asks for confirmation
         if(!confirm(`Are you sure you want to delete "${categoryData.name}"\nThis action is irreversible`)) return;
         // Gets the category to delete, goes back one category in the tree, deletes the current category and refreshes the page
         const toDelete = categoryData.uuid;
-        back();
         fetch(`/api/category/${toDelete}`, {
             method: 'DELETE'
         }).then(() => {
             alert('Category deleted');
-            refresh();
+            back();
+            close();
         })
         .catch((err) => console.error(err));
     }
@@ -119,11 +120,11 @@ export default function CategoryPopUp({
                         <input type="text" name="name" id="name" defaultValue={ categoryData.name } />
                     </div>
                 </div>
+                <button type="submit">{ category ? 'Apply' : 'Create' }</button>
                 {
                     // If in editing mode, show the Delete button
                     category && <button onClick={ deleteCurrentCategory }>Delete</button>
                 }
-                <button type="submit">{ category ? 'Apply' : 'Create' }</button>
             </form>
         </div>
     )

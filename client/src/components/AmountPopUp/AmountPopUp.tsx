@@ -1,4 +1,4 @@
-import { FormEvent, createRef, useEffect, useState } from 'react';
+import { FormEvent, MouseEvent, createRef, useEffect, useState } from 'react';
 import styles from './AmountPopUp.module.scss';
 import { Category } from '../../utils/Category';
 import { Amount } from '../../utils/Amount';
@@ -99,7 +99,8 @@ export default function AmountPopUp({
     };
 
     // Function used to delete the currently edited amount
-    const deleteCurrentAmount = () => {
+    const deleteCurrentAmount = (e: MouseEvent) => {
+        e.preventDefault();
         // Asks for confirmation
         if(!confirm(`Are you sure you want to delete this amount\nThis action is irreversible`)) return;
         // Deletes the current amount and refreshes the page
@@ -150,11 +151,11 @@ export default function AmountPopUp({
                         <input type="text" name="description" id="description" value={ amountData.description } onChange={ (e) => setAmountData((data) => { return { ...data, description: e.target.value }; }) } />
                     </div>
                 </div>
+                <button type="submit">{ amount ? 'Apply' : 'Add' }</button>
                 {
                     // If in editing mode, show the Delete button
                     amount && <button onClick={ deleteCurrentAmount }>Delete</button>
                 }
-                <button type="submit">{ amount ? 'Apply' : 'Add' }</button>
             </form>
         </div>
     );

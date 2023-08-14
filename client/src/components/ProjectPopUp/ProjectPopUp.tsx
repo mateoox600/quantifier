@@ -1,4 +1,4 @@
-import { FormEvent, createRef, useEffect, useState } from 'react';
+import { FormEvent, MouseEvent, createRef, useEffect, useState } from 'react';
 import styles from './ProjectPopUp.module.scss';
 import { Project } from '../../utils/Project';
 
@@ -84,7 +84,8 @@ export default function ProjectPopUp({
     };
 
     // Function used to delete the currently edited project
-    const deleteCurrentProject = () => {
+    const deleteCurrentProject = (e: MouseEvent) => {
+        e.preventDefault();
         // Asks for confirmation
         if(!confirm(`Are you sure you want to delete "${projectData.name}"\nThis action is irreversible`)) return;
         // deletes the project and refreshes the page
@@ -115,11 +116,11 @@ export default function ProjectPopUp({
                         <input type="text" name="unit" id="unit" defaultValue={ projectData.unit } />
                     </div>
                 </div>
+                <button type="submit">{ project ? 'Apply' : 'Create' }</button>
                 {
                     // If in editing mode, show the Delete button
                     project && <button onClick={ deleteCurrentProject }>Delete</button>
                 }
-                <button type="submit">{ project ? 'Apply' : 'Create' }</button>
             </form>
         </div>
     )
