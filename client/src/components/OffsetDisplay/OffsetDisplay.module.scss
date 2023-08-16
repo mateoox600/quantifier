@@ -1,0 +1,15 @@
+
+.offset-container {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin: 1em;
+
+    a {
+        cursor: pointer;
+    }
+}
+
+.offset-date {
+    font-size: 1.5em;
+}

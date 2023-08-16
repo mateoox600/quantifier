@@ -11,6 +11,7 @@ import AmountPopUp from '../../components/AmountPopUp/AmountPopUp';
 import ChevronLeft from '../../assets/chevron_left.svg';
 import ChevronRight from '../../assets/chevron_right.svg';
 import Sort from '../../assets/sort.svg';
+import OffsetDisplay from '../../components/OffsetDisplay/OffsetDisplay';
 
 export default function List() {
 
@@ -31,12 +32,13 @@ export default function List() {
         setOffset(Number(searchParams.get('offset')) || 0);
     }, [ location ]);
 
-    const navigateHome = (newOffset: number) => {
+    const navigateList = (newOffset: number) => {
         navigate(`./?offset=${newOffset}`);
     };
 
-    const moveOffset = (n: number) => {
-        navigateHome(offset + n);
+    const moveOffset = (n?: number) => {
+        if(!n) navigateList(0);
+        else navigateList(offset + n);
     };
 
     const { uuid: projectUuid } = useParams();
@@ -79,18 +81,14 @@ export default function List() {
                 amount={ editing }
                 offset={ offset }
                 close={ () => setEditing('') }
-                refresh={ () => navigateHome(offset) }
-                back={ () => {} }
+                refresh={ () => navigateList(offset) }
             /> }
-            <div className={ styles['offset-container'] }>
-                <a onClick={ () => moveOffset(-1) }>
-                    <img src={ ChevronLeft } alt="<" />
-                </a>
-                <a onClick={ () => moveOffset(-offset) } className={ styles['offset-date'] }>{ date }</a>
-                <a onClick={ () => moveOffset(1) }>
-                    <img src={ ChevronRight } alt=">" />
-                </a>
-            </div>
+
+            <OffsetDisplay
+                moveOffset={ moveOffset }
+                date={ date }
+            />
+
             <table className={ styles.table }>
                 <tbody>
                     <tr>

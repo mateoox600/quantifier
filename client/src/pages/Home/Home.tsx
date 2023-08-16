@@ -17,6 +17,7 @@ import ChevronRight from '../../assets/chevron_right.svg';
 import Add from '../../assets/add.svg';
 import Setting from '../../assets/settings.svg';
 import Sort from '../../assets/sort.svg';
+import OffsetDisplay from '../../components/OffsetDisplay/OffsetDisplay';
 
 export default function Home() {
 
@@ -55,8 +56,9 @@ export default function Home() {
         }`);
     };
 
-    const moveOffset = (n: number) => {
-        navigateHome(offset + n, currentCategoryTree);
+    const moveOffset = (n?: number) => {
+        if(!n) navigateHome(0, currentCategoryTree);
+        else navigateHome(offset + n, currentCategoryTree);
     };
 
     const moveCategory = (category?: Category) => {
@@ -152,9 +154,6 @@ export default function Home() {
                         .catch((err) => console.error(err))
                     navigateHome(offset, currentCategoryTree);
                 } }
-                back={ // Goes back one category in the category tree
-                    moveCategory
-                }
             /> }
 
             { /* Popup to create and edit categories */ }
@@ -174,15 +173,10 @@ export default function Home() {
             <h1>{ project.name }</h1>
 
             { /* Displays the button to go back and go forward one month, and dispalys the current date */ }
-            <div className={ styles['offset-container'] }>
-                <a onClick={ () => moveOffset(-1) }>
-                    <img src={ ChevronLeft } alt="<" />
-                </a>
-                <a onClick={ () => moveOffset(-offset) } className={ styles['offset-date'] }>{ date }</a>
-                <a onClick={ () => moveOffset(1) }>
-                    <img src={ ChevronRight } alt=">" />
-                </a>
-            </div>
+            <OffsetDisplay
+                moveOffset={ moveOffset }
+                date={ date }
+            />
 
             { /* Label used to display total used in current category, and button to add new amount to that category */ }
             <div className={ styles['used-label'] }>

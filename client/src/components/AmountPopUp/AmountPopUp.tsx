@@ -9,8 +9,7 @@ export interface CategoryPopUpProps {
     amount?: string,
     offset: number,
     close: () => void,
-    refresh: () => void,
-    back: () => void
+    refresh: () => void
 }
 
 // Formats the date to be compatible with the date input type
@@ -25,7 +24,6 @@ export default function AmountPopUp({
     offset, // Offset for the dateTime
     close, // A function called when the pop up needs to close itself
     refresh, // A function called when the pop up changed some things on the server, and the page probably needs a refresh
-    back // A function called when the pop up needs to go back one category in the category tree
 }: CategoryPopUpProps) {
 
     // The data of the current edited amount (not used if creating an amount)
