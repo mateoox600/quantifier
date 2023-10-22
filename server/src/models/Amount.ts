@@ -57,8 +57,10 @@ export default class Amount {
             MATCH (amount:Amount)
             MATCH (amount)-[*0..]->(project:Project)
             WHERE project.uuid=$projectUuid
-            AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime)
-            OR (amount.planned=true AND amount.dateTime<=$endDateTime AND (amount.endDateTime >= $endDateTime OR amount.endDateTime=-1))
+            AND (
+                (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime)
+                OR (amount.planned=true AND amount.dateTime<=$endDateTime AND (amount.endDateTime >= $endDateTime OR amount.endDateTime=-1))
+            )
             OPTIONAL MATCH (amount)-[:AmountHasCategory]->(category:Category)
             RETURN amount, category
         `, { startDateTime, endDateTime, projectUuid: project });
