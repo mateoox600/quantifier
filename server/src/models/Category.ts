@@ -141,7 +141,8 @@ export default class Category {
             const amountsQuery = await session.run(`
                 MATCH (category:Category)<-[*0..]-(sub:Category)
                 MATCH (sub)-[:AmountHasCategory]-(amount:Amount)
-                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR (amount.planned=true AND amount.dateTime<=$endDateTime)
+                WHERE category.uuid=$uuid AND (amount.dateTime>=$startDateTime AND amount.dateTime<$endDateTime) OR
+                    (amount.planned=true AND amount.dateTime<=$endDateTime AND (amount.endDateTime >= $endDateTime OR amount.endDateTime=-1))
                 RETURN amount
             `, { uuid: subCategory.uuid, startDateTime, endDateTime });
 

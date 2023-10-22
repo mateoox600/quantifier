@@ -38,7 +38,7 @@ export default function InfoGauge({
                 </div>
             </div>
             { /* Bottom description of the gauge, containing left amount */ }
-            <p className={ styles['gauge-left'] }>{total.left}{ unit } Left</p>
+            <p className={ styles['gauge-left'] }>{total.left.toFixed(2)}{ unit } Left</p>
         </div>
     );
 }
